@@ -19,7 +19,7 @@ export default function StaffLogin() {
     e.preventDefault();
     setError("");
     mutation.mutate(
-      { username, password },
+      { data: { username, password } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries();

@@ -9,11 +9,12 @@ import {
   useListStaffMembers,
   useGetStaffMe,
   useStaffLogout,
+  type TicketNote,
 } from "@workspace/api-client-react";
 import { StaffGuard } from "@/components/staff-guard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 
 const statusOptions = [
@@ -120,9 +121,18 @@ function TicketDetailContent() {
   const [, params] = useRoute("/staff/tickets/:id");
   const ticketId = Number(params?.id);
   const queryClient = useQueryClient();
-  const qk = { query: { enabled: !isNaN(ticketId) } };
+  const qk = { query: { enabled: !isNaN(ticketId) } as any };
 
   const { data, isLoading, refetch } = useGetTicketById(ticketId, qk);
+  const { data: notes, refetch: refetchNotes } = useQuery<TicketNote[]>({
+    queryKey: ["ticket-notes", ticketId],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/staff/tickets/${ticketId}/notes`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !isNaN(ticketId),
+  });
   const { data: staffMembers } = useListStaffMembers();
   const updateStatus = useUpdateTicketStatus();
   const assign = useAssignTicket();
@@ -136,7 +146,7 @@ function TicketDetailContent() {
   if (isLoading) return <div className="text-center py-20 text-white/30">Loading ticket...</div>;
   if (!data) return <div className="text-center py-20 text-red-400">Ticket not found.</div>;
 
-  const { ticket, replies, notes, timeline } = data;
+  const { ticket, replies, timeline } = data;
 
   const handleStatusChange = (status: string) => {
     updateStatus.mutate({ ticketId, data: { status } }, { onSuccess: () => refetch() });
@@ -156,7 +166,7 @@ function TicketDetailContent() {
   const handleNote = () => {
     if (!noteText.trim()) return;
     addNote.mutate({ ticketId, data: { note: noteText.trim() } }, {
-      onSuccess: () => { setNoteText(""); refetch(); }
+      onSuccess: () => { setNoteText(""); refetchNotes(); }
     });
   };
 
@@ -257,7 +267,7 @@ function TicketDetailContent() {
 
             {activeTab === "notes" && (
               <div className="space-y-4">
-                {notes?.map((n) => (
+                {notes?.map((n: TicketNote) => (
                   <div key={n.id} className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-yellow-400 text-xs font-bold uppercase tracking-wider">Internal Note</span>

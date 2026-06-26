@@ -51,7 +51,7 @@ export default function Track() {
       return;
     }
     mutation.mutate(
-      { ticketCode: ticketCode.trim().toUpperCase(), accessCode: accessCode.trim().toUpperCase() },
+      { data: { ticketCode: ticketCode.trim().toUpperCase(), accessCode: accessCode.trim().toUpperCase() } },
       {
         onSuccess: (data) => setResult(data),
         onError: (err: any) => {

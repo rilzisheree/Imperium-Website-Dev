@@ -81,7 +81,7 @@ function TicketForm({ type, onClose, onSuccess }: TicketFormProps) {
       return;
     }
     mutation.mutate(
-      { ...form, type: type.id },
+      { data: { ...form, type: type.id } },
       {
         onSuccess: (data) => onSuccess({ ticketCode: data.ticketCode, accessCode: data.accessCode }),
         onError: () => setError("Failed to submit ticket. Please try again."),

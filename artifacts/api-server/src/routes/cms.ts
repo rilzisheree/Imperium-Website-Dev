@@ -38,7 +38,7 @@ router.get("/all", requireStaff, async (req, res) => {
 // PATCH /api/cms/:key — staff: update a content item
 router.patch("/:key", requireStaff, async (req, res) => {
   try {
-    const { key } = req.params;
+    const key = req.params.key as string;
     const { value } = req.body;
     const session = (req as any).session;
 

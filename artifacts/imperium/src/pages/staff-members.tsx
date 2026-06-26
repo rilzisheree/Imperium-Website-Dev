@@ -119,7 +119,7 @@ function MembersContent() {
           <motion.div key={member.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="bg-white/3 border border-white/10 rounded-xl p-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${member.isOnline ? "bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]" : "bg-white/20"}`} title={member.isOnline ? "Online" : "Offline"} />
+              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-white/20" />
               <div>
                 <span className="text-white font-semibold">{member.username}</span>
                 {member.id === me?.id && <span className="ml-2 text-xs text-primary">(you)</span>}

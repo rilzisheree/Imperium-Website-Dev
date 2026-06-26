@@ -6,8 +6,8 @@ export function StaffGuard({ children }: { children: ReactNode }) {
   const [_, setLocation] = useLocation();
   const { data: staff, isLoading, error } = useGetStaffMe({
     query: {
-      retry: false
-    }
+      retry: false,
+    } as any,
   });
 
   useEffect(() => {
