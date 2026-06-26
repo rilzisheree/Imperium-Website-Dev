@@ -83,6 +83,11 @@ const frontendDist =
   process.env.FRONTEND_DIST_PATH ??
   path.resolve(import.meta.dirname, "public");
 
+logger.info(
+  { metaDirname: import.meta.dirname, frontendDist },
+  "Resolved frontend dist path",
+);
+
 if (existsSync(frontendDist)) {
   logger.info({ frontendDist }, "Serving frontend static files");
 
@@ -96,7 +101,8 @@ if (existsSync(frontendDist)) {
 
   // SPA catch-all: return index.html for any non-API route so client-side
   // routing (wouter) works correctly on hard refresh / direct URL access.
-  app.get("*", (_req, res) => {
+  // Express 5 + path-to-regexp v8 requires a named wildcard, not bare *.
+  app.get("/{*path}", (_req, res) => {
     res.sendFile(path.join(frontendDist, "index.html"));
   });
 } else {
