@@ -25,7 +25,8 @@ export default function About() {
                 { title: "Heroes", desc: "Uphold peace and justice. Climb the billboard charts through heroic deeds." },
                 { title: "Villains", desc: "Shape the underworld. Form syndicates and challenge the status quo." },
                 { title: "Students", desc: "Attend the prestigious academy. Train your quirks and prepare for the future." },
-                { title: "Civilians", desc: "The backbone of society. Influence the economy and public opinion." }
+                { title: "Civilians", desc: "The backbone of society. Influence the economy and public opinion." },
+                { title: "Vigilantes", desc: "Walk the line between hero and outlaw. Fight for justice outside the law's reach." }
               ].map((section, i) => (
                 <Card key={i} className="bg-background/50 border-white/10 hover:border-primary/50 transition-colors">
                   <CardContent className="p-6">

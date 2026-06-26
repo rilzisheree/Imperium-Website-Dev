@@ -86,9 +86,12 @@ export default function StaffLogin() {
           </form>
         </div>
 
-        <p className="text-center text-white/20 text-xs mt-6">
-          Imperium Staff Portal — Authorized Personnel Only
-        </p>
+        <div className="text-center mt-6 flex flex-col items-center gap-2">
+          <a href="/" className="text-white/30 text-xs hover:text-primary transition-colors flex items-center gap-1.5">
+            ← Return to Main Site
+          </a>
+          <p className="text-white/15 text-xs">Imperium Staff Portal — Authorized Personnel Only</p>
+        </div>
       </motion.div>
     </div>
   );

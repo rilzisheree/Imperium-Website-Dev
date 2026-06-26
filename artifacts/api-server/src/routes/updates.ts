@@ -2,7 +2,7 @@ import { Router } from "express";
 import { eq, desc, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { updatesTable, staffMembersTable } from "@workspace/db";
-import { requireStaff } from "../middlewares/auth";
+import { requireAdmin } from "../middlewares/auth";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -71,8 +71,8 @@ router.get("/:updateId", async (req, res) => {
   }
 });
 
-// POST /api/staff/updates — staff only
-router.post("/staff", requireStaff, async (req, res) => {
+// POST /api/staff/updates — admin only
+router.post("/staff", requireAdmin, async (req, res) => {
   try {
     const { title, content, category, pinned, imageUrl } = req.body;
     const session = (req as any).session;
@@ -100,8 +100,28 @@ router.post("/staff", requireStaff, async (req, res) => {
   }
 });
 
-// PATCH /api/staff/updates/:id — staff only
-router.patch("/staff/:updateId", requireStaff, async (req, res) => {
+// DELETE /api/staff/updates/:id — admin only
+router.delete("/staff/:updateId", requireAdmin, async (req, res) => {
+  try {
+    const updateId = parseInt(req.params.updateId as string);
+    if (isNaN(updateId)) {
+      res.status(400).json({ error: "Invalid update ID" });
+      return;
+    }
+    const [deleted] = await db.delete(updatesTable).where(eq(updatesTable.id, updateId)).returning();
+    if (!deleted) {
+      res.status(404).json({ error: "Update not found" });
+      return;
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, "Failed to delete update");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// PATCH /api/staff/updates/:id — admin only
+router.patch("/staff/:updateId", requireAdmin, async (req, res) => {
   try {
     const updateId = parseInt(req.params.updateId as string);
     const { title, content, category, pinned, imageUrl } = req.body;
