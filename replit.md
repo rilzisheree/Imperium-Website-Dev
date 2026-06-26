@@ -48,10 +48,10 @@ Official website for Imperium — a My Hero Academia lore roleplay Roblox game. 
 - **Updates** — news/announcements with category filtering
 - **Staff Portal** (`/staff`) — login, dashboard (stats + charts), ticket queue, ticket detail with replies, notes, status changes, and assignment
 
-## Staff Accounts (defaults — change in production)
+## Staff Accounts
 
-- `admin` / `imperium2025` — Owner role
-- `HeroMod` / `staff2025` — Moderator role
+- `vkiraowner` / `vkira4422` — Owner role
+- `HeroMod` / `vkira4422` — Moderator role
 
 ## Gotchas
 
