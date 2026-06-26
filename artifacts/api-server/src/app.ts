@@ -2,6 +2,8 @@ import express, { type Express } from "express";
 import cors from "cors";
 import session from "express-session";
 import pinoHttp from "pino-http";
+import path from "path";
+import { existsSync } from "fs";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
@@ -65,12 +67,42 @@ app.use(
     cookie: {
       secure: isProduction,
       httpOnly: true,
-      sameSite: isProduction ? "none" : "lax",
+      sameSite: isProduction ? "lax" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
   }),
 );
 
 app.use("/api", router);
+
+// Serve the React frontend in production.
+// The built frontend lives at artifacts/imperium/dist/public relative to the workspace root.
+// When bundled, import.meta.dirname is artifacts/api-server/dist, so we go up two levels.
+const frontendDist =
+  process.env.FRONTEND_DIST_PATH ??
+  path.resolve(import.meta.dirname, "../../imperium/dist/public");
+
+if (existsSync(frontendDist)) {
+  logger.info({ frontendDist }, "Serving frontend static files");
+
+  // Serve static assets with long-lived cache headers
+  app.use(
+    express.static(frontendDist, {
+      maxAge: isProduction ? "1y" : 0,
+      index: false, // We'll handle the index ourselves below
+    }),
+  );
+
+  // SPA catch-all: return index.html for any non-API route so client-side
+  // routing (wouter) works correctly on hard refresh / direct URL access.
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(frontendDist, "index.html"));
+  });
+} else {
+  logger.warn(
+    { frontendDist },
+    "Frontend dist not found — only API routes are active",
+  );
+}
 
 export default app;
