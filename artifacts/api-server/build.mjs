@@ -139,8 +139,19 @@ async function copyFrontend() {
   }
 }
 
+async function copySessionSql() {
+  // connect-pg-simple reads table.sql at runtime from the same directory as the
+  // running bundle. Copy it into dist/ so the bundled server can find it.
+  const { createRequire } = await import("node:module");
+  const req = createRequire(import.meta.url);
+  const pgSessionDir = path.dirname(req.resolve("connect-pg-simple"));
+  const src = path.join(pgSessionDir, "table.sql");
+  const dest = path.resolve(artifactDir, "dist/table.sql");
+  await cp(src, dest);
+}
+
 buildAll()
-  .then(copyFrontend)
+  .then(() => Promise.all([copyFrontend(), copySessionSql()]))
   .catch((err) => {
     console.error(err);
     process.exit(1);
