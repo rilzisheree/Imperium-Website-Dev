@@ -1,0 +1,95 @@
+Read the entire GitHub repository and understand the existing codebase before making any changes.
+
+The website is already built. Do **not** redesign it, rewrite it, or remove any existing functionality. Your task is to complete and integrate the backend features while preserving the current UI and structure.
+
+## Your Tasks
+
+### 1. Connect Supabase
+
+Use the existing environment variables:
+
+* `SUPABASE_URL`
+* `SUPABASE_ANON_KEY`
+* `SUPABASE_SERVICE_ROLE_KEY`
+* `SUPABASE_DATABASE_URL`
+
+Ensure the database is properly configured and migrations are applied if necessary.
+
+### 2. Connect Resend
+
+Use:
+
+* `RESEND_API_KEY`
+* `RESEND_FROM_EMAIL`
+
+Implement email functionality for:
+
+* Ticket submission confirmation
+* Ticket status updates
+* Staff replies
+* Ticket closure notifications
+
+Emails should be clean, professional, and branded for Imperium.
+
+### 3. Complete the Ticket System
+
+Verify that the following ticket types work correctly:
+
+* Report a User
+* Appeal Your Ban
+* Appeal Your Character Death
+* Request a Permadeath Event
+
+Each submission should:
+
+* Generate a unique Ticket ID (e.g. `IMP-593821`)
+* Save to Supabase
+* Send a confirmation email through Resend
+* Be visible in the staff dashboard
+
+### 4. Ticket Tracking
+
+Implement or finish the ticket tracking page.
+
+Users should be able to enter their Ticket ID (and any required verification) to view:
+
+* Current status
+* Timeline
+* Staff replies
+* Decision
+* Last updated
+
+### 5. Staff Dashboard
+
+Ensure staff can:
+
+* View tickets
+* Reply
+* Change status
+* Assign tickets
+* Close/Reopen tickets
+* Add internal notes
+
+Every action should update the database and trigger email notifications where appropriate.
+
+### 6. Verify Everything
+
+Check the entire application for:
+
+* Missing API routes
+* Missing database tables
+* Broken imports
+* Runtime errors
+* Build errors
+* Authentication issues
+* Missing environment variable usage
+
+Fix any issues you find.
+
+### Important
+
+* Do **not** redesign the website.
+* Do **not** change the UI unless required to make functionality work.
+* Reuse the existing code wherever possible.
+* Explain any significant changes you make.
+* Ensure the project builds successfully and all features are fully functional before finishing.
