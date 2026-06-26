@@ -1,9 +1,26 @@
+import { execSync } from "child_process";
+import path from "path";
 import bcrypt from "bcryptjs";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { db } from "@workspace/db";
 import { staffMembersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+
+async function runMigrations() {
+  try {
+    const workspaceRoot = path.resolve(import.meta.dirname, "../../../");
+    logger.info({ workspaceRoot }, "Running DB schema push...");
+    execSync("pnpm --filter @workspace/db run push --force", {
+      cwd: workspaceRoot,
+      stdio: "pipe",
+      env: { ...process.env },
+    });
+    logger.info("DB schema push completed");
+  } catch (err) {
+    logger.error({ err }, "DB schema push failed — server will start anyway");
+  }
+}
 
 async function seedOwner() {
   try {
@@ -41,6 +58,7 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
+await runMigrations();
 await seedOwner();
 
 app.listen(port, (err) => {
