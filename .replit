@@ -28,13 +28,13 @@ args = "Start API Server"
 name = "Start Imperium Frontend"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=22990 BASE_PATH=/ pnpm --filter @workspace/imperium run dev"
-waitForPort = 22990
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=5173 BASE_PATH=/ pnpm --filter @workspace/imperium run dev"
+waitForPort = 5173
 
 [[workflows.workflow]]
 name = "Start API Server"
