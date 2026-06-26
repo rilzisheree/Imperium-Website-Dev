@@ -24,20 +24,23 @@ async function runMigrations() {
 
 async function seedOwner() {
   try {
+    const OWNER_USERNAME = "imperiumowner";
+    const OWNER_PASSWORD = "Imperium#2025!";
+
     const existing = await db
       .select()
       .from(staffMembersTable)
-      .where(eq(staffMembersTable.username, "vkiraowner"))
+      .where(eq(staffMembersTable.username, OWNER_USERNAME))
       .limit(1);
 
     if (existing.length === 0) {
-      const passwordHash = await bcrypt.hash("vkira4422", 10);
+      const passwordHash = await bcrypt.hash(OWNER_PASSWORD, 10);
       await db.insert(staffMembersTable).values({
-        username: "vkiraowner",
+        username: OWNER_USERNAME,
         passwordHash,
         role: "owner",
       });
-      logger.info("Seeded owner account: vkiraowner");
+      logger.info({ username: OWNER_USERNAME }, "Seeded owner account");
     }
   } catch (err) {
     logger.error({ err }, "Failed to seed owner account");
