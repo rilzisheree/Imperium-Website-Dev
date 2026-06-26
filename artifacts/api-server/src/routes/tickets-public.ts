@@ -53,7 +53,7 @@ router.post("/", async (req, res) => {
   try {
     const { type, robloxUsername, discordUsername, discordUserId, email, subject, reason, additionalInfo, agreedToTerms } = req.body;
 
-    if (!type || !robloxUsername || !discordUsername || !discordUserId || !email || !subject || !agreedToTerms) {
+    if (!type || !robloxUsername || !discordUsername || !discordUserId || !subject || !agreedToTerms) {
       res.status(400).json({ error: "Missing required fields" });
       return;
     }
@@ -81,7 +81,7 @@ router.post("/", async (req, res) => {
       robloxUsername,
       discordUsername,
       discordUserId,
-      email,
+      email: email ?? "",
       subject,
       reason: reason ?? null,
       additionalInfo: additionalInfo ?? null,

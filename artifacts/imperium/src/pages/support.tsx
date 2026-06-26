@@ -64,7 +64,6 @@ function TicketForm({ type, onClose, onSuccess }: TicketFormProps) {
     robloxUsername: "",
     discordUsername: "",
     discordUserId: "",
-    email: "",
     subject: "",
     reason: "",
     additionalInfo: "",
@@ -81,7 +80,7 @@ function TicketForm({ type, onClose, onSuccess }: TicketFormProps) {
       return;
     }
     mutation.mutate(
-      { data: { ...form, type: type.id } },
+      { data: { ...form, email: "", type: type.id } },
       {
         onSuccess: (data) => onSuccess({ ticketCode: data.ticketCode, accessCode: data.accessCode }),
         onError: () => setError("Failed to submit ticket. Please try again."),
@@ -117,7 +116,6 @@ function TicketForm({ type, onClose, onSuccess }: TicketFormProps) {
       {field("robloxUsername", "Roblox Username", "YourRobloxName")}
       {field("discordUsername", "Discord Username", "username#0000")}
       {field("discordUserId", "Discord User ID", "123456789012345678")}
-      {field("email", "Email Address", "your@email.com")}
       {field("subject", "Subject", "Brief summary of your request")}
       {field("reason", "Reason / Description", "Provide as much detail as possible...", true)}
       {field("additionalInfo", "Additional Information (optional)", "Links, evidence, context...", true)}

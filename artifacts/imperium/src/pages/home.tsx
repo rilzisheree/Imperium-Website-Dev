@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, useScroll, useTransform } from "framer-motion";
+import orangeServerImg from "@assets/image_1782497587581.png";
 
 const DISCORD_URL = "https://discord.gg/7GMcWzJu28";
 
@@ -239,10 +240,10 @@ export default function Home() {
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <p className="text-accent text-sm tracking-[4px] uppercase font-semibold mb-4">Play Now</p>
-              <h2 className="text-4xl md:text-5xl font-heading font-black text-white mb-4">JOIN THE GAME</h2>
+              <p className="text-accent text-sm tracking-[4px] uppercase font-semibold mb-4">Coming Soon</p>
+              <h2 className="text-4xl md:text-5xl font-heading font-black text-white mb-4">IN DEVELOPMENT</h2>
               <p className="text-white/40 text-lg max-w-xl mx-auto">
-                Imperium is live on Roblox. Enter the world, pick your path, and write your legend.
+                Imperium is currently under development. The world is being built — stay tuned for the official launch on Roblox.
               </p>
             </motion.div>
 
@@ -253,9 +254,9 @@ export default function Home() {
               transition={{ delay: 0.2 }}
               className="bg-white/3 border border-accent/20 rounded-2xl p-8 backdrop-blur-sm hover:border-accent/40 transition-all duration-300 hover:shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)]"
             >
-              {/* Game banner placeholder */}
-              <div className="w-full h-48 md:h-64 bg-white/5 border border-white/10 rounded-xl mb-8 flex items-center justify-center">
-                <p className="text-white/20 text-sm">[ Game Banner Placeholder ]</p>
+              {/* Game banner */}
+              <div className="w-full h-48 md:h-64 rounded-xl mb-8 overflow-hidden">
+                <img src={orangeServerImg} alt="Imperium" className="w-full h-full object-cover" />
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
@@ -275,10 +276,10 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   size="lg"
-                  className="bg-accent text-white hover:bg-accent/90 text-base px-10 h-13 shadow-[0_0_25px_-5px_rgba(59,130,246,0.5)] font-bold"
-                  onClick={() => window.open("https://www.roblox.com/games/???", "_blank", "noopener,noreferrer")}
+                  className="bg-accent text-white hover:bg-accent/90 text-base px-10 h-13 shadow-[0_0_25px_-5px_rgba(59,130,246,0.5)] font-bold opacity-50 cursor-not-allowed"
+                  disabled
                 >
-                  Play on Roblox
+                  Launching Soon
                 </Button>
                 <Button
                   size="lg"
