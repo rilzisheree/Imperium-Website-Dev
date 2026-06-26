@@ -4,24 +4,28 @@ import publicTicketsRouter from "./tickets-public";
 import staffTicketsRouter from "./tickets-staff";
 import staffRouter from "./staff";
 import updatesRouter from "./updates";
+import cmsRouter from "./cms";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 
-// Public ticket routes: POST /api/tickets, POST /api/tickets/track
+// Public ticket routes
 router.use("/tickets", publicTicketsRouter);
 
-// Staff auth + members + dashboard
+// Staff auth + members + dashboard + logs
 router.use("/staff", staffRouter);
 
-// Staff ticket management: /api/staff/tickets/*
+// Staff ticket management
 router.use("/staff/tickets", staffTicketsRouter);
 
-// Public updates: GET /api/updates, GET /api/updates/:id
+// Public updates
 router.use("/updates", updatesRouter);
 
-// Staff update management: /api/staff/updates
+// Staff update management
 router.use("/staff/updates", updatesRouter);
+
+// CMS content (public read + staff write)
+router.use("/cms", cmsRouter);
 
 export default router;

@@ -1,20 +1,20 @@
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Link } from "wouter";
 import { motion } from "framer-motion";
+
+const DISCORD_URL = "https://discord.gg/7GMcWzJu28";
 
 export default function Home() {
   return (
     <Layout>
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-        {/* Background elements */}
         <div className="absolute inset-0 bg-background" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,210,63,0.15)_0%,transparent_50%)]" />
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
-        
+
         <div className="container mx-auto px-4 z-10 text-center flex flex-col items-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -31,17 +31,16 @@ export default function Home() {
               Step into a living breathing world where your choices matter.
               Join the ranks of elite heroes, formidable villains, or ordinary citizens caught in the crossfire.
             </p>
-            
+
             <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-8 h-14 shadow-[0_0_20px_-5px_rgba(255,210,63,0.5)]">
-                Play Now
-              </Button>
-              <Button size="lg" variant="outline" className="border-secondary text-secondary hover:bg-secondary/10 text-lg px-8 h-14 shadow-[0_0_20px_-5px_rgba(0,217,255,0.3)]">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-secondary text-secondary hover:bg-secondary/10 text-lg px-8 h-14 shadow-[0_0_20px_-5px_rgba(0,217,255,0.3)]"
+                onClick={() => window.open(DISCORD_URL, "_blank", "noopener,noreferrer")}
+              >
                 Join Discord
               </Button>
-              <Link href="/about" className="inline-flex h-14 items-center justify-center rounded-md px-8 text-lg font-medium text-white hover:text-primary transition-colors">
-                Learn More
-              </Link>
             </div>
           </motion.div>
         </div>
@@ -94,17 +93,19 @@ export default function Home() {
 
       {/* Stats row */}
       <section className="py-20 border-y border-white/5 bg-background relative overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,210,63,0.03)_50%,transparent_75%)] bg-[length:250%_250%] animate-[gradient_15s_ease_infinite]" />
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,210,63,0.03)_50%,transparent_75%)] bg-[length:250%_250%]" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { label: "Active Players", value: "2,500+" },
-              { label: "Unique Quirks", value: "150+" },
-              { label: "Lore Events", value: "40+" },
-              { label: "Agencies", value: "12" }
+              { label: "Active Players" },
+              { label: "Unique Quirks" },
+              { label: "Lore Events" },
+              { label: "Agencies" },
             ].map((stat, i) => (
               <div key={i} className="flex flex-col items-center">
-                <span className="text-4xl md:text-5xl font-heading font-bold text-primary mb-2 drop-shadow-[0_0_8px_rgba(255,210,63,0.4)]">{stat.value}</span>
+                <span className="text-4xl md:text-5xl font-heading font-bold text-primary mb-2 drop-shadow-[0_0_8px_rgba(255,210,63,0.4)] tracking-widest">
+                  ???
+                </span>
                 <span className="text-sm md:text-base text-muted-foreground uppercase tracking-widest">{stat.label}</span>
               </div>
             ))}
