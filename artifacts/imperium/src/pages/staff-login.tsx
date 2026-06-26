@@ -26,7 +26,7 @@ export default function StaffLogin() {
           navigate("/staff/dashboard");
         },
         onError: (err: any) => {
-          setError(err?.response?.data?.error ?? "Invalid credentials. Please try again.");
+          setError(err?.data?.error ?? "Invalid credentials. Please try again.");
         },
       }
     );
