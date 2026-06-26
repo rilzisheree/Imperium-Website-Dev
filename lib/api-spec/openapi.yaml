@@ -3,13 +3,22 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Imperium website API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: tickets
+    description: Support ticket operations
+  - name: staff
+    description: Staff authentication and management
+  - name: updates
+    description: News and changelog updates
+  - name: dashboard
+    description: Staff dashboard statistics
+
 paths:
   /healthz:
     get:
@@ -24,6 +33,407 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Ticket submission (public) ──────────────────────────────────────────────
+  /tickets:
+    post:
+      operationId: createTicket
+      tags: [tickets]
+      summary: Submit a support ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketInput"
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /tickets/track:
+    post:
+      operationId: trackTicket
+      tags: [tickets]
+      summary: Track a ticket by ID and email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketTrackInput"
+      responses:
+        "200":
+          description: Ticket found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketDetail"
+        "404":
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Staff: ticket management ────────────────────────────────────────────────
+  /staff/tickets:
+    get:
+      operationId: listTickets
+      tags: [staff]
+      summary: List all tickets (staff only)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: assignedTo
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of tickets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /staff/tickets/{ticketId}:
+    get:
+      operationId: getTicketById
+      tags: [staff]
+      summary: Get full ticket detail (staff only)
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ticket detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /staff/tickets/{ticketId}/status:
+    patch:
+      operationId: updateTicketStatus
+      tags: [staff]
+      summary: Update ticket status
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketStatusUpdate"
+      responses:
+        "200":
+          description: Ticket updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+
+  /staff/tickets/{ticketId}/assign:
+    patch:
+      operationId: assignTicket
+      tags: [staff]
+      summary: Assign ticket to a staff member
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketAssign"
+      responses:
+        "200":
+          description: Ticket assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+
+  /staff/tickets/{ticketId}/replies:
+    post:
+      operationId: addTicketReply
+      tags: [staff]
+      summary: Reply to a ticket
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketReplyInput"
+      responses:
+        "201":
+          description: Reply added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketReply"
+
+  /staff/tickets/{ticketId}/notes:
+    post:
+      operationId: addTicketNote
+      tags: [staff]
+      summary: Add internal staff note to ticket
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketNoteInput"
+      responses:
+        "201":
+          description: Note added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketNote"
+
+  # ── Staff authentication ────────────────────────────────────────────────────
+  /staff/auth/login:
+    post:
+      operationId: staffLogin
+      tags: [staff]
+      summary: Staff login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffLoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMember"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /staff/auth/logout:
+    post:
+      operationId: staffLogout
+      tags: [staff]
+      summary: Staff logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /staff/auth/me:
+    get:
+      operationId: getStaffMe
+      tags: [staff]
+      summary: Get current logged-in staff member
+      responses:
+        "200":
+          description: Current staff member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMember"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /staff/members:
+    get:
+      operationId: listStaffMembers
+      tags: [staff]
+      summary: List all staff members
+      responses:
+        "200":
+          description: Staff members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffMember"
+
+  # ── Dashboard ───────────────────────────────────────────────────────────────
+  /staff/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  # ── Public updates / news ───────────────────────────────────────────────────
+  /updates:
+    get:
+      operationId: listUpdates
+      tags: [updates]
+      summary: List published updates/news
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: pinned
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of updates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Update"
+
+  /updates/{updateId}:
+    get:
+      operationId: getUpdate
+      tags: [updates]
+      summary: Get a single update
+      parameters:
+        - name: updateId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Update detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Update"
+
+  /staff/updates:
+    post:
+      operationId: createUpdate
+      tags: [staff]
+      summary: Create a new update/news post (staff only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInput"
+      responses:
+        "201":
+          description: Update created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Update"
+
+  /staff/updates/{updateId}:
+    patch:
+      operationId: editUpdate
+      tags: [staff]
+      summary: Edit an update (staff only)
+      parameters:
+        - name: updateId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePatch"
+      responses:
+        "200":
+          description: Update edited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Update"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +444,221 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    # ── Tickets ──────────────────────────────────────────────────────────────
+    Ticket:
+      type: object
+      required: [id, ticketCode, type, status, robloxUsername, discordUsername, email, subject, createdAt, updatedAt]
+      properties:
+        id:            { type: integer }
+        ticketCode:    { type: string }
+        type:          { type: string }
+        status:        { type: string }
+        robloxUsername: { type: string }
+        discordUsername: { type: string }
+        email:         { type: string }
+        subject:       { type: string }
+        reason:        { type: ["string", "null"] }
+        additionalInfo: { type: ["string", "null"] }
+        assignedToId:  { type: ["integer", "null"] }
+        assignedToName: { type: ["string", "null"] }
+        createdAt:     { type: string }
+        updatedAt:     { type: string }
+
+    TicketInput:
+      type: object
+      required: [type, robloxUsername, discordUsername, discordUserId, email, subject, agreedToTerms]
+      properties:
+        type:             { type: string }
+        robloxUsername:   { type: string }
+        discordUsername:  { type: string }
+        discordUserId:    { type: string }
+        email:            { type: string }
+        subject:          { type: string }
+        reason:           { type: string }
+        additionalInfo:   { type: string }
+        agreedToTerms:    { type: boolean }
+
+    TicketTrackInput:
+      type: object
+      required: [ticketCode, email]
+      properties:
+        ticketCode: { type: string }
+        email:      { type: string }
+
+    TicketDetail:
+      type: object
+      required: [ticket, timeline, replies]
+      properties:
+        ticket:   { $ref: "#/components/schemas/Ticket" }
+        timeline:
+          type: array
+          items:
+            $ref: "#/components/schemas/TicketEvent"
+        replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/TicketReply"
+
+    TicketListResponse:
+      type: object
+      required: [tickets, total, page, totalPages]
+      properties:
+        tickets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ticket"
+        total:      { type: integer }
+        page:       { type: integer }
+        totalPages: { type: integer }
+
+    TicketStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string }
+
+    TicketAssign:
+      type: object
+      required: [staffId]
+      properties:
+        staffId: { type: ["integer", "null"] }
+
+    TicketReplyInput:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+
+    TicketReply:
+      type: object
+      required: [id, ticketId, authorName, authorRole, message, createdAt]
+      properties:
+        id:         { type: integer }
+        ticketId:   { type: integer }
+        authorName: { type: string }
+        authorRole: { type: string }
+        message:    { type: string }
+        createdAt:  { type: string }
+
+    TicketNoteInput:
+      type: object
+      required: [note]
+      properties:
+        note: { type: string }
+
+    TicketNote:
+      type: object
+      required: [id, ticketId, authorName, note, createdAt]
+      properties:
+        id:         { type: integer }
+        ticketId:   { type: integer }
+        authorName: { type: string }
+        note:       { type: string }
+        createdAt:  { type: string }
+
+    TicketEvent:
+      type: object
+      required: [id, ticketId, eventType, description, createdAt]
+      properties:
+        id:          { type: integer }
+        ticketId:    { type: integer }
+        eventType:   { type: string }
+        description: { type: string }
+        actorName:   { type: ["string", "null"] }
+        createdAt:   { type: string }
+
+    # ── Staff ─────────────────────────────────────────────────────────────────
+    StaffMember:
+      type: object
+      required: [id, username, role, createdAt]
+      properties:
+        id:        { type: integer }
+        username:  { type: string }
+        role:      { type: string }
+        createdAt: { type: string }
+
+    StaffLoginInput:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string }
+        password: { type: string }
+
+    # ── Dashboard ─────────────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required: [openTickets, pendingTickets, closedToday, totalTickets, recentTickets, ticketsByType, ticketsByStatus]
+      properties:
+        openTickets:    { type: integer }
+        pendingTickets: { type: integer }
+        closedToday:    { type: integer }
+        totalTickets:   { type: integer }
+        recentTickets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ticket"
+        ticketsByType:
+          type: array
+          items:
+            $ref: "#/components/schemas/TicketCountByLabel"
+        ticketsByStatus:
+          type: array
+          items:
+            $ref: "#/components/schemas/TicketCountByLabel"
+
+    TicketCountByLabel:
+      type: object
+      required: [label, count]
+      properties:
+        label: { type: string }
+        count: { type: integer }
+
+    # ── Updates ───────────────────────────────────────────────────────────────
+    Update:
+      type: object
+      required: [id, title, content, category, authorName, publishedAt, createdAt]
+      properties:
+        id:          { type: integer }
+        title:       { type: string }
+        content:     { type: string }
+        category:    { type: string }
+        authorName:  { type: string }
+        pinned:      { type: boolean }
+        imageUrl:    { type: ["string", "null"] }
+        publishedAt: { type: string }
+        createdAt:   { type: string }
+
+    UpdateInput:
+      type: object
+      required: [title, content, category]
+      properties:
+        title:    { type: string }
+        content:  { type: string }
+        category: { type: string }
+        pinned:   { type: boolean }
+        imageUrl: { type: string }
+
+    UpdatePatch:
+      type: object
+      properties:
+        title:    { type: string }
+        content:  { type: string }
+        category: { type: string }
+        pinned:   { type: boolean }
+        imageUrl: { type: string }

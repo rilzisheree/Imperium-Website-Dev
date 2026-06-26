@@ -1,0 +1,1 @@
+- [Imperium project architecture](imperium-arch.md) — Contract-first API, split ticket routes, session auth, Resend email via fetch
