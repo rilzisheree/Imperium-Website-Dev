@@ -65,6 +65,12 @@ router.post("/auth/login", async (req, res) => {
     session.staffUsername = staff.username;
     session.staffRole = staff.role;
 
+    // Explicitly save session to the PostgreSQL store before responding,
+    // so the next request (useGetStaffMe) always finds it in the DB.
+    await new Promise<void>((resolve, reject) => {
+      session.save((err: unknown) => (err ? reject(err) : resolve()));
+    });
+
     // Log successful login
     await db.insert(loginEventsTable).values({
       staffId: staff.id,
