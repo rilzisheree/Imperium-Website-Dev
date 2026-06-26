@@ -6,9 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useCreateTicket } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
 
 const ticketTypes = [
   {
@@ -49,10 +48,15 @@ const ticketTypes = [
   },
 ];
 
+interface TicketSuccess {
+  ticketCode: string;
+  accessCode: string;
+}
+
 interface TicketFormProps {
   type: (typeof ticketTypes)[0];
   onClose: () => void;
-  onSuccess: (code: string) => void;
+  onSuccess: (result: TicketSuccess) => void;
 }
 
 function TicketForm({ type, onClose, onSuccess }: TicketFormProps) {
@@ -79,7 +83,7 @@ function TicketForm({ type, onClose, onSuccess }: TicketFormProps) {
     mutation.mutate(
       { ...form, type: type.id },
       {
-        onSuccess: (data) => onSuccess(data.ticketCode),
+        onSuccess: (data) => onSuccess({ ticketCode: data.ticketCode, accessCode: data.accessCode }),
         onError: () => setError("Failed to submit ticket. Please try again."),
       }
     );
@@ -147,7 +151,17 @@ function TicketForm({ type, onClose, onSuccess }: TicketFormProps) {
 
 export default function Support() {
   const [activeType, setActiveType] = useState<(typeof ticketTypes)[0] | null>(null);
-  const [successCode, setSuccessCode] = useState<string | null>(null);
+  const [success, setSuccess] = useState<TicketSuccess | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (!success) return;
+    const text = `Ticket ID: ${success.ticketCode}\nAccess Code: ${success.accessCode}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <Layout>
@@ -216,30 +230,59 @@ export default function Support() {
             <TicketForm
               type={activeType}
               onClose={() => setActiveType(null)}
-              onSuccess={(code) => { setActiveType(null); setSuccessCode(code); }}
+              onSuccess={(result) => { setActiveType(null); setSuccess(result); }}
             />
           )}
         </DialogContent>
       </Dialog>
 
       {/* Success Dialog */}
-      <Dialog open={!!successCode} onOpenChange={(open) => { if (!open) setSuccessCode(null); }}>
+      <Dialog open={!!success} onOpenChange={(open) => { if (!open) setSuccess(null); }}>
         <DialogContent className="bg-[#0f0f1a] border-primary/30 text-white max-w-md text-center">
-          <div className="py-4 space-y-4">
+          <div className="py-4 space-y-5">
             <div className="w-16 h-16 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center mx-auto text-2xl text-primary font-bold">✓</div>
-            <h2 className="text-2xl font-bold text-white">Ticket Submitted</h2>
-            <p className="text-white/50">Your ticket has been received. Keep your Ticket ID safe.</p>
-            <div className="bg-black/40 border border-primary/30 rounded-lg p-4">
-              <p className="text-primary/60 text-xs uppercase tracking-widest mb-1">Ticket ID</p>
-              <p className="text-primary text-3xl font-black tracking-widest">{successCode}</p>
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-1">Ticket Submitted!</h2>
+              <p className="text-white/50 text-sm">Save both codes below — you will need them to track your ticket.</p>
             </div>
-            <p className="text-white/40 text-sm">A confirmation has been sent to your email. Our team will respond within 24–72 hours.</p>
-            <div className="flex gap-3">
-              <Button variant="outline" className="flex-1 border-white/10 text-white/60" onClick={() => setSuccessCode(null)}>
-                Close
+
+            <div className="space-y-3">
+              <div className="bg-black/40 border border-primary/30 rounded-lg p-4">
+                <p className="text-primary/60 text-xs uppercase tracking-widest mb-1">Ticket ID</p>
+                <p className="text-primary text-2xl font-black tracking-widest font-mono">{success?.ticketCode}</p>
+              </div>
+              <div className="bg-black/40 border border-secondary/30 rounded-lg p-4">
+                <p className="text-secondary/60 text-xs uppercase tracking-widest mb-1">Access Code</p>
+                <p className="text-secondary text-2xl font-black tracking-widest font-mono">{success?.accessCode}</p>
+              </div>
+            </div>
+
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+              <p className="text-yellow-400 text-xs leading-relaxed">
+                ⚠ Save both codes now. They cannot be recovered and are required to view your ticket. Do not share them.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                className="border-white/10 text-white/70 hover:text-white"
+                onClick={handleCopy}
+              >
+                {copied ? "✓ Copied!" : "Copy Ticket Information"}
               </Button>
-              <Button className="flex-1 bg-primary text-primary-foreground" onClick={() => { setSuccessCode(null); window.location.href = "/track"; }}>
+              <Button
+                className="bg-primary text-primary-foreground"
+                onClick={() => { setSuccess(null); window.location.href = "/track"; }}
+              >
                 Track Ticket
+              </Button>
+              <Button
+                variant="ghost"
+                className="text-white/40 hover:text-white text-sm"
+                onClick={() => setSuccess(null)}
+              >
+                Return Home
               </Button>
             </div>
           </div>

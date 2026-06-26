@@ -9,6 +9,10 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface SuccessResponse {
+  success: boolean;
+}
+
 export interface ErrorResponse {
   error: string;
 }
@@ -20,6 +24,7 @@ export interface MessageResponse {
 export interface Ticket {
   id: number;
   ticketCode: string;
+  accessCode: string;
   type: string;
   status: string;
   robloxUsername: string;
@@ -52,7 +57,7 @@ export interface TicketInput {
 
 export interface TicketTrackInput {
   ticketCode: string;
-  email: string;
+  accessCode: string;
 }
 
 export interface TicketEvent {

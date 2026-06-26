@@ -6,6 +6,7 @@ import { staffMembersTable } from "./staff";
 export const ticketsTable = pgTable("tickets", {
   id: serial("id").primaryKey(),
   ticketCode: text("ticket_code").notNull().unique(),
+  accessCode: text("access_code").notNull().default(""),
   type: text("type").notNull(),
   status: text("status").notNull().default("pending"),
   robloxUsername: text("roblox_username").notNull(),

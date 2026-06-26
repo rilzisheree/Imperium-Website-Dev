@@ -37,7 +37,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function Track() {
   const [ticketCode, setTicketCode] = useState("");
-  const [email, setEmail] = useState("");
+  const [accessCode, setAccessCode] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<TicketDetail | null>(null);
   const mutation = useTrackTicket();
@@ -46,16 +46,16 @@ export default function Track() {
     e.preventDefault();
     setError("");
     setResult(null);
-    if (!ticketCode.trim() || !email.trim()) {
-      setError("Both Ticket ID and email are required.");
+    if (!ticketCode.trim() || !accessCode.trim()) {
+      setError("Both Ticket ID and Access Code are required.");
       return;
     }
     mutation.mutate(
-      { ticketCode: ticketCode.trim().toUpperCase(), email: email.trim() },
+      { ticketCode: ticketCode.trim().toUpperCase(), accessCode: accessCode.trim().toUpperCase() },
       {
         onSuccess: (data) => setResult(data),
         onError: (err: any) => {
-          setError(err?.response?.data?.error ?? "Ticket not found. Check your Ticket ID and email address.");
+          setError(err?.response?.data?.error ?? "Ticket not found. Check your Ticket ID and Access Code.");
         },
       }
     );
@@ -69,7 +69,7 @@ export default function Track() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
             <p className="text-secondary text-sm tracking-[4px] uppercase font-semibold mb-4">Support Center</p>
             <h1 className="text-5xl font-black text-white tracking-tight mb-4">Track Your Ticket</h1>
-            <p className="text-white/40 text-lg">Enter your Ticket ID and email to view your ticket status and staff replies.</p>
+            <p className="text-white/40 text-lg">Enter your Ticket ID and Access Code to view your ticket status and staff replies.</p>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -86,15 +86,17 @@ export default function Track() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-white/70 text-sm">Email Address</Label>
+                  <Label className="text-white/70 text-sm">Access Code</Label>
                   <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                    placeholder="ABCD1234"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 font-mono text-lg tracking-widest"
                   />
                 </div>
+              </div>
+              <div className="bg-primary/5 border border-primary/15 rounded-lg px-4 py-2.5 text-primary/60 text-xs">
+                Both codes were shown when you first submitted your ticket. Keep them safe — they are the only way to access your ticket.
               </div>
               {error && <p className="text-red-400 text-sm">{error}</p>}
               <Button type="submit" disabled={mutation.isPending} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-12 text-base shadow-[0_0_20px_-5px_rgba(255,210,63,0.4)]">
@@ -172,7 +174,7 @@ export default function Track() {
 
                 {result.replies.length === 0 && (
                   <div className="text-center py-8 text-white/30 text-sm">
-                    No staff replies yet. Our team will respond within 24–72 hours.
+                    No staff replies yet. Our team will respond as soon as possible.
                   </div>
                 )}
               </motion.div>

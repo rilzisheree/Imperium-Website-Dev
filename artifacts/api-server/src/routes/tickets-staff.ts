@@ -230,6 +230,36 @@ router.post("/:ticketId/replies", async (req, res) => {
   }
 });
 
+// DELETE /api/staff/tickets/:ticketId/delete — owner only
+router.delete("/:ticketId/delete", async (req, res) => {
+  try {
+    const ticketId = parseInt(req.params.ticketId);
+    const session = (req as any).session;
+
+    if (isNaN(ticketId)) { res.status(400).json({ error: "Invalid ticket ID" }); return; }
+
+    const ownerRoles = ["owner", "developer"];
+    if (!session?.staffRole || !ownerRoles.includes(session.staffRole)) {
+      res.status(403).json({ error: "Only owners can delete tickets" });
+      return;
+    }
+
+    const [ticket] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticketId)).limit(1);
+    if (!ticket) { res.status(404).json({ error: "Ticket not found" }); return; }
+
+    await db.delete(ticketEventsTable).where(eq(ticketEventsTable.ticketId, ticketId));
+    await db.delete(ticketRepliesTable).where(eq(ticketRepliesTable.ticketId, ticketId));
+    await db.delete(ticketNotesTable).where(eq(ticketNotesTable.ticketId, ticketId));
+    await db.delete(ticketsTable).where(eq(ticketsTable.id, ticketId));
+
+    logger.info({ ticketId, ticketCode: ticket.ticketCode, actor: session.staffUsername }, "Ticket deleted");
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Failed to delete ticket");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // POST /api/staff/tickets/:ticketId/notes
 router.post("/:ticketId/notes", async (req, res) => {
   try {

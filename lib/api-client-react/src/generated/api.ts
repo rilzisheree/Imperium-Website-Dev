@@ -28,6 +28,7 @@ import type {
   MessageResponse,
   StaffLoginInput,
   StaffMember,
+  SuccessResponse,
   Ticket,
   TicketAssign,
   TicketDetail,
@@ -449,6 +450,76 @@ export function useGetTicketById<TData = Awaited<ReturnType<typeof getTicketById
 
 
 
+
+export const getDeleteTicketUrl = (ticketId: number,) => {
+
+
+
+
+  return `/api/staff/tickets/${ticketId}/delete`
+}
+
+/**
+ * @summary Delete a ticket (owner only)
+ */
+export const deleteTicket = async (ticketId: number, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getDeleteTicketUrl(ticketId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteTicketMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTicket>>, TError,{ticketId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTicket>>, TError,{ticketId: number}, TContext> => {
+
+const mutationKey = ['deleteTicket'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTicket>>, {ticketId: number}> = (props) => {
+          const {ticketId} = props ?? {};
+
+          return  deleteTicket(ticketId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTicketMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTicket>>>
+
+    export type DeleteTicketMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Delete a ticket (owner only)
+ */
+export const useDeleteTicket = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTicket>>, TError,{ticketId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTicket>>,
+        TError,
+        {ticketId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteTicketMutationOptions(options));
+    }
 
 export const getUpdateTicketStatusUrl = (ticketId: number,) => {
 

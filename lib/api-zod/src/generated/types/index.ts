@@ -14,6 +14,7 @@ export * from './listUpdatesParams';
 export * from './messageResponse';
 export * from './staffLoginInput';
 export * from './staffMember';
+export * from './successResponse';
 export * from './ticket';
 export * from './ticketAssign';
 export * from './ticketCountByLabel';

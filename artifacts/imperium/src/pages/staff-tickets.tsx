@@ -32,9 +32,16 @@ function StaffHeader() {
           <span className="text-white/20">|</span>
           <span className="text-white/40 text-sm">Staff Portal</span>
         </div>
-        <nav className="hidden md:flex items-center gap-6 text-sm">
-          <a href="/staff/dashboard" className="text-white/60 hover:text-primary transition-colors">Dashboard</a>
-          <a href="/staff/tickets" className="text-primary">Tickets</a>
+        <nav className="hidden md:flex items-center gap-5 text-sm">
+          {[
+            { href: "/staff/dashboard", label: "Dashboard" },
+            { href: "/staff/tickets", label: "Tickets" },
+            { href: "/staff/members", label: "Team" },
+            { href: "/staff/logs", label: "Logs" },
+            { href: "/staff/cms", label: "Site Content" },
+          ].map((l) => (
+            <a key={l.href} href={l.href} className={`transition-colors ${location.pathname === l.href ? "text-primary" : "text-white/60 hover:text-primary"}`}>{l.label}</a>
+          ))}
         </nav>
         <div className="flex items-center gap-3">
           <span className="text-white/40 text-sm hidden sm:block">

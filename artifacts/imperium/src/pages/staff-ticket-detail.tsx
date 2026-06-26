@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import {
   useGetTicketById,
   useUpdateTicketStatus,
@@ -13,7 +13,7 @@ import {
 import { StaffGuard } from "@/components/staff-guard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 
 const statusOptions = [
@@ -50,9 +50,16 @@ function StaffHeader() {
           <span className="text-white/20">|</span>
           <span className="text-white/40 text-sm">Staff Portal</span>
         </div>
-        <nav className="hidden md:flex items-center gap-6 text-sm">
-          <a href="/staff/dashboard" className="text-white/60 hover:text-primary transition-colors">Dashboard</a>
-          <a href="/staff/tickets" className="text-primary">Tickets</a>
+        <nav className="hidden md:flex items-center gap-5 text-sm">
+          {[
+            { href: "/staff/dashboard", label: "Dashboard" },
+            { href: "/staff/tickets", label: "Tickets" },
+            { href: "/staff/members", label: "Team" },
+            { href: "/staff/logs", label: "Logs" },
+            { href: "/staff/cms", label: "Site Content" },
+          ].map((l) => (
+            <a key={l.href} href={l.href} className={`transition-colors ${location.pathname === l.href ? "text-primary" : "text-white/60 hover:text-primary"}`}>{l.label}</a>
+          ))}
         </nav>
         <div className="flex items-center gap-3">
           <span className="text-white/40 text-sm hidden sm:block">
@@ -64,6 +71,48 @@ function StaffHeader() {
         </div>
       </div>
     </header>
+  );
+}
+
+function DeleteTicketButton({ ticketId }: { ticketId: number }) {
+  const { data: me } = useGetStaffMe();
+  const [, navigate] = useLocation();
+  const isOwner = me?.role === "owner" || me?.role === "developer";
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/staff/tickets/${ticketId}/delete`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw await res.json();
+      return res.json();
+    },
+    onSuccess: () => navigate("/staff/tickets"),
+  });
+
+  if (!isOwner) return null;
+
+  return (
+    <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5">
+      <h3 className="text-red-400/80 text-xs uppercase tracking-widest mb-3">Danger Zone</h3>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          if (confirm("Delete this ticket permanently? This cannot be undone.")) {
+            deleteMutation.mutate();
+          }
+        }}
+        disabled={deleteMutation.isPending}
+        className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10 text-sm"
+      >
+        {deleteMutation.isPending ? "Deleting..." : "Delete Ticket"}
+      </Button>
+      {deleteMutation.isError && (
+        <p className="text-red-400 text-xs mt-2">{(deleteMutation.error as any)?.error ?? "Failed to delete"}</p>
+      )}
+    </div>
   );
 }
 
@@ -301,6 +350,9 @@ function TicketDetailContent() {
               ))}
             </div>
           </div>
+
+          {/* Delete (Owner only) */}
+          <DeleteTicketButton ticketId={ticketId} />
         </div>
       </div>
     </div>

@@ -1,0 +1,613 @@
+# Imperium - Official Website 
+
+Create a fully functional, production-ready website for my Roblox game **Imperium**, a **My Hero Academia lore roleplay experience**.
+
+The website should serve as:
+
+* The official game website.
+* The official support center.
+* The official information hub.
+* The official ticket system.
+* The official staff dashboard.
+
+Take inspiration from the overall quality, smoothness, and premium feel of **https://unlimitedprojectstudio.com/**, but **DO NOT copy its layouts, branding, colors, assets, or structure.** The website must have its own unique identity.
+
+**Important:**
+
+* Do **NOT** generate AI artwork.
+* Use placeholders for all images because I will upload my own banner, logo, screenshots, icons, and artwork.
+* Every page should feel like it belongs to a professionally developed online game, not a typical Roblox game.
+
+---
+
+# Visual Identity
+
+The website should feel cinematic, premium, immersive, and modern.
+
+### Primary Color Palette
+
+The website should be **mostly yellow**.
+
+Use these colors:
+
+* Primary: Vibrant Golden Yellow (#FFD23F or similar)
+* Secondary: Bright Cyan (#00D9FF)
+* Accent: Electric Blue (#3B82F6)
+* Background: Dark charcoal / near black (#0B0B0F)
+* Text: White and light gray
+
+Yellow should dominate the entire website through:
+
+* Buttons
+* Icons
+* Borders
+* Glowing effects
+* Cards
+* Highlights
+* Navigation
+* Loading animations
+* Section dividers
+* Decorative elements
+
+Blue and cyan should only be complementary accent colors.
+
+---
+
+# Style
+
+Create a design that feels:
+
+* AAA quality
+* Cinematic
+* Heroic
+* Modern
+* Minimal
+* Futuristic
+* Elegant
+* Interactive
+* Highly polished
+
+Use:
+
+* Glassmorphism
+* Premium typography
+* Smooth page transitions
+* Scroll animations
+* Animated section reveals
+* Floating particles
+* Soft glowing lighting
+* Animated gradients
+* Hover animations
+* Rounded modern UI
+* Responsive desktop/mobile design
+* Sticky navigation
+* Beautiful loading animation
+* Back-to-top button
+* Dynamic lighting effects
+
+Avoid making it look like a generic Roblox fan website.
+
+Instead, make it feel like the official website of a major online multiplayer game.
+
+---
+
+# Theme
+
+The design should subtly capture the feeling of a professional Hero Agency.
+
+Inspiration:
+
+* Hero headquarters
+* Modern cities
+* Hero organizations
+* High-end technology
+* Golden lighting
+* Cinematic atmosphere
+
+Avoid directly copying My Hero Academia visuals.
+
+Instead, create an original identity inspired by professional hero organizations.
+
+---
+
+# Navigation
+
+Home
+
+About
+
+Support
+
+Updates
+
+Staff
+
+Discord
+
+Play
+
+Discord and Play buttons should stand out.
+
+---
+
+# Home Page
+
+Large cinematic hero section using my uploaded banner.
+
+Display:
+
+Imperium
+
+"A My Hero Academia Lore Experience on Roblox."
+
+Buttons:
+
+Join Discord
+
+Learn More
+
+Below, create feature cards:
+
+Story-Driven Roleplay
+
+Hero & Villain Progression
+
+Frequent Lore Events
+
+Active Community
+
+Player Choices Matter
+
+Large parallax scrolling sections.
+
+Smooth entrance animations.
+
+---
+
+# About
+
+Explain:
+
+What Imperium is.
+
+How players create stories.
+
+Roleplay.
+
+Heroes.
+
+Villains.
+
+Civilians.
+
+Lore progression.
+
+---
+
+---
+
+# Support Center
+
+Create one of the most important sections of the website.
+
+Large animated support cards:
+
+Report a User
+
+Appeal Your Ban
+
+Appeal Your Character Death
+
+Request a Permadeath Event
+
+Every card opens a professional support form.
+
+Each form contains:
+
+Roblox Username
+
+Discord Username
+
+Discord User ID
+
+Subject
+
+Reason
+
+Evidence Upload
+
+Additional Information
+
+Agreement Checkbox
+
+Submit Button
+
+---
+
+# Ticket System
+
+Build a complete support ticket system.
+
+When a user submits a ticket:
+
+* Generate a unique Ticket ID (Example: IMP-X9A4Q7)
+* Generate a secure Access Code (Example: J2N8K5P1)
+* Save both securely in the database.
+* Save the ticket type, submission date, evidence, and all submitted information.
+
+Immediately after submission, display a success page containing:
+
+* Ticket Submitted Successfully
+* Ticket ID
+* Access Code
+* A warning telling the user to save both because they will be required to access the ticket in the future.
+
+Include buttons:
+
+* Copy Ticket Information
+* Track Ticket
+* Return Home
+
+Do not use email confirmations or email notifications.
+
+---
+
+# Ticket Tracking
+
+Create a page called:
+
+Track Ticket
+
+Users should enter:
+
+* Ticket ID
+* Access Code
+
+Only if both values are correct should the ticket be displayed.
+
+Display:
+
+* Ticket Status
+* Ticket Type
+* Messages
+* Timeline
+* Evidence
+* Decision
+* Created Date
+* Last Updated
+* Open / Closed
+
+Allow users to:
+
+* Upload additional evidence.
+* Reply to staff messages.
+* View the complete ticket history.
+
+Whenever staff update a ticket, those changes should immediately appear on the Track Ticket page.
+
+Do not use emails.
+---
+
+# User Accounts
+
+Do not implement Discord OAuth or traditional user accounts.
+
+Players should not be required to register or log in.
+
+All support requests should be accessed using the generated Ticket ID and Access Code.
+
+The Ticket ID and Access Code should be the only method of viewing and interacting with a ticket.
+
+---
+
+# Discord
+
+Discord widget placeholder.
+
+Join Discord button.
+
+The invite: https://discord.gg/7GMcWzJu28
+
+---
+
+# Roblox
+
+Large game section.
+
+Placeholder statistics:
+
+Favorites
+
+Visits
+
+Likes
+
+Current Players
+
+I will provide the Roblox Game ID later. For now add ??? as a statistic for all 
+
+---
+
+# Updates
+
+Create a News & Changelog page.
+
+Staff can publish updates.
+
+Each update includes:
+
+Title
+
+Author
+
+Date
+
+Images
+
+Description
+
+Category
+
+Pinned updates.
+
+Search functionality.
+
+---
+
+# Staff Portal
+
+Create a completely separate Staff Dashboard.
+
+Only authorized staff members can access it.
+
+Secure authentication.
+
+Role-based permissions.
+
+Roles:
+
+Owner
+
+Developer
+
+Head Administrator
+
+Administrator
+
+Moderator
+
+Support Team
+
+Permissions should be fully customizable.
+
+---
+
+# Dashboard
+
+Display:
+
+Open Tickets
+
+Pending Appeals
+
+Reports
+
+Closed Tickets
+
+Recent Activity
+
+Announcements
+
+Statistics
+
+Quick Actions
+
+---
+
+# Ticket Management
+
+Staff should be able to:
+
+View tickets
+
+Search tickets
+
+Assign tickets
+
+Reassign tickets
+
+Reply
+
+Request evidence
+
+Approve
+
+Reject
+
+Close
+
+Reopen
+
+Delete (Owner only)
+
+Merge duplicate tickets
+
+Tag tickets
+
+Filter tickets
+
+Sort tickets
+
+Every action should update the ticket timeline.
+
+---
+
+# Ticket Statuses
+
+Pending
+
+Awaiting User Response
+
+Under Investigation
+
+Accepted
+
+Denied
+
+Resolved
+
+Closed
+
+---
+
+# Ticket Timeline
+
+Automatically log:
+
+Ticket Created
+
+Assigned
+
+Staff Reply
+
+Evidence Added
+
+Status Changed
+
+Accepted
+
+Rejected
+
+Closed
+
+Include timestamps.
+
+---
+
+# Internal Staff Notes
+
+Allow private notes visible only to staff.
+
+---
+
+# User Profiles
+
+Search Roblox users.
+
+View:
+
+Previous appeals
+
+Previous reports
+
+Punishments
+
+Warnings
+
+Ticket history
+
+Internal notes
+
+---
+
+# Announcements
+
+Staff can publish announcements appearing on the homepage.
+
+---
+
+# Logs
+
+Log every important action.
+
+Login attempts.
+
+Ticket edits.
+
+Replies.
+
+Role changes.
+
+Announcements.
+
+Permission changes.
+
+Deleted tickets.
+
+Everything should be auditable.
+
+---
+
+# Security
+
+Rate limiting
+
+Spam protection
+
+CAPTCHA
+
+Encrypted passwords
+
+Secure authentication
+
+CSRF protection
+
+Input validation
+
+SQL injection protection
+
+Audit logs
+
+Role-based permissions
+
+Secure file uploads
+
+Session management
+
+---
+
+# Footer
+
+Discord
+
+Roblox
+
+Support
+
+Privacy Policy
+
+Terms of Service
+
+Contact
+
+Copyright © Imperium.
+
+---
+
+# Technical Requirements
+
+Use modern technologies:
+
+* Next.js (React)
+* Node.js backend
+* PostgreSQL database
+* REST API or tRPC
+* Fully responsive
+* SEO optimized
+* Clean folder structure
+* Maintainable code
+* Fast performance
+* Accessibility best practices
+
+---
+
+# Final Goal
+
+The finished website should look and feel like the official website of a AAA online game or professional game studio. It should be immersive, cinematic, polished, and intuitive while serving as the central hub for Imperium's community, support, updates, and staff operations. Every interaction should feel smooth and premium, with yellow as the dominant visual identity supported by subtle cyan and blue accents.
+
+Also, make sure that the owner of the website "Me" have full permissions and can change EVERYTHING in the website try to make me able to chance as much as I can, text or anything, also my sign in is 
+
+vkiraowner - As a name 
+vkira4422 - As a password
+
+Also, make sure only one person can use an account at a time. 

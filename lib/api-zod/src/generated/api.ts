@@ -35,6 +35,7 @@ export const CreateTicketBody = zod.object({
 export const CreateTicketResponse = zod.object({
   "id": zod.number(),
   "ticketCode": zod.string(),
+  "accessCode": zod.string(),
   "type": zod.string(),
   "status": zod.string(),
   "robloxUsername": zod.string(),
@@ -55,13 +56,14 @@ export const CreateTicketResponse = zod.object({
  */
 export const TrackTicketBody = zod.object({
   "ticketCode": zod.string(),
-  "email": zod.string()
+  "accessCode": zod.string()
 })
 
 export const TrackTicketResponse = zod.object({
   "ticket": zod.object({
   "id": zod.number(),
   "ticketCode": zod.string(),
+  "accessCode": zod.string(),
   "type": zod.string(),
   "status": zod.string(),
   "robloxUsername": zod.string(),
@@ -110,6 +112,7 @@ export const ListTicketsResponse = zod.object({
   "tickets": zod.array(zod.object({
   "id": zod.number(),
   "ticketCode": zod.string(),
+  "accessCode": zod.string(),
   "type": zod.string(),
   "status": zod.string(),
   "robloxUsername": zod.string(),
@@ -140,6 +143,7 @@ export const GetTicketByIdResponse = zod.object({
   "ticket": zod.object({
   "id": zod.number(),
   "ticketCode": zod.string(),
+  "accessCode": zod.string(),
   "type": zod.string(),
   "status": zod.string(),
   "robloxUsername": zod.string(),
@@ -173,6 +177,18 @@ export const GetTicketByIdResponse = zod.object({
 
 
 /**
+ * @summary Delete a ticket (owner only)
+ */
+export const DeleteTicketParams = zod.object({
+  "ticketId": zod.coerce.number()
+})
+
+export const DeleteTicketResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
  * @summary Update ticket status
  */
 export const UpdateTicketStatusParams = zod.object({
@@ -186,6 +202,7 @@ export const UpdateTicketStatusBody = zod.object({
 export const UpdateTicketStatusResponse = zod.object({
   "id": zod.number(),
   "ticketCode": zod.string(),
+  "accessCode": zod.string(),
   "type": zod.string(),
   "status": zod.string(),
   "robloxUsername": zod.string(),
@@ -215,6 +232,7 @@ export const AssignTicketBody = zod.object({
 export const AssignTicketResponse = zod.object({
   "id": zod.number(),
   "ticketCode": zod.string(),
+  "accessCode": zod.string(),
   "type": zod.string(),
   "status": zod.string(),
   "robloxUsername": zod.string(),
@@ -329,6 +347,7 @@ export const GetDashboardStatsResponse = zod.object({
   "recentTickets": zod.array(zod.object({
   "id": zod.number(),
   "ticketCode": zod.string(),
+  "accessCode": zod.string(),
   "type": zod.string(),
   "status": zod.string(),
   "robloxUsername": zod.string(),

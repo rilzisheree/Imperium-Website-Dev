@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, and, ilike } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   ticketsTable,
@@ -19,10 +19,20 @@ function generateTicketCode(): string {
   return `IMP-${num}`;
 }
 
+function generateAccessCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
 function formatTicket(t: typeof ticketsTable.$inferSelect, assignedName?: string | null) {
   return {
     id: t.id,
     ticketCode: t.ticketCode,
+    accessCode: t.accessCode,
     type: t.type,
     status: t.status,
     robloxUsername: t.robloxUsername,
@@ -61,8 +71,11 @@ router.post("/", async (req, res) => {
       ticketCode = generateTicketCode();
     }
 
+    const accessCode = generateAccessCode();
+
     const [ticket] = await db.insert(ticketsTable).values({
       ticketCode,
+      accessCode,
       type,
       status: "pending",
       robloxUsername,
@@ -98,9 +111,9 @@ router.post("/", async (req, res) => {
 // POST /api/tickets/track
 router.post("/track", async (req, res) => {
   try {
-    const { ticketCode, email } = req.body;
-    if (!ticketCode || !email) {
-      res.status(400).json({ error: "Ticket ID and email are required" });
+    const { ticketCode, accessCode } = req.body;
+    if (!ticketCode || !accessCode) {
+      res.status(400).json({ error: "Ticket ID and Access Code are required" });
       return;
     }
 
@@ -109,12 +122,12 @@ router.post("/track", async (req, res) => {
       .from(ticketsTable)
       .where(and(
         eq(ticketsTable.ticketCode, ticketCode.trim().toUpperCase()),
-        ilike(ticketsTable.email, email.trim()),
+        eq(ticketsTable.accessCode, accessCode.trim().toUpperCase()),
       ))
       .limit(1);
 
     if (!ticket) {
-      res.status(404).json({ error: "Ticket not found. Check your Ticket ID and email address." });
+      res.status(404).json({ error: "Ticket not found. Check your Ticket ID and Access Code." });
       return;
     }
 

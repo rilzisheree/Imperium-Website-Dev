@@ -9,6 +9,7 @@
 export interface Ticket {
   id: number;
   ticketCode: string;
+  accessCode: string;
   type: string;
   status: string;
   robloxUsername: string;

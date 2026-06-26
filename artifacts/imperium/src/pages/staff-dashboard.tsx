@@ -52,15 +52,18 @@ function StaffDashboardContent() {
             <span className="text-white/20">|</span>
             <span className="text-white/40 text-sm">Staff Portal</span>
           </div>
-          <nav className="hidden md:flex items-center gap-6 text-sm">
+          <nav className="hidden md:flex items-center gap-5 text-sm">
             {[
               { href: "/staff/dashboard", label: "Dashboard" },
               { href: "/staff/tickets", label: "Tickets" },
+              { href: "/staff/members", label: "Team" },
+              { href: "/staff/logs", label: "Logs" },
+              { href: "/staff/cms", label: "Site Content" },
             ].map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-white/60 hover:text-primary transition-colors"
+                className={`transition-colors ${location.pathname === link.href ? "text-primary" : "text-white/60 hover:text-primary"}`}
               >
                 {link.label}
               </a>
