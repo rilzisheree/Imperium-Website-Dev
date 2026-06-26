@@ -1,0 +1,79 @@
+The website is complete. Do not redesign the UI or rebuild existing pages. Your task is to connect the existing website to Supabase and prepare it for production deployment.
+
+## Supabase
+
+Use Supabase as the backend.
+
+Implement and configure:
+
+* Database schema
+* Migrations
+* Row-Level Security (RLS)
+* Indexes
+* Storage bucket for evidence uploads
+* Staff authentication
+* Role-based permissions
+
+Create all required tables, including:
+
+* Staff Accounts
+* Tickets
+* Ticket Messages
+* Ticket Timeline
+* Internal Staff Notes
+* Announcements
+* Changelog Posts
+* Audit Logs
+
+Connect every existing feature on the website to Supabase.
+
+The ticket system should:
+
+* Generate a unique Ticket ID.
+* Generate a secure Access Code.
+* Store tickets in Supabase.
+* Store uploaded evidence in Supabase Storage.
+* Update timelines automatically.
+* Save all staff actions.
+
+The Staff Dashboard should be fully connected to Supabase and persist all data correctly.
+
+## Environment Variables
+
+Configure the project to use:
+
+* SUPABASE_URL
+* SUPABASE_ANON_KEY
+* SUPABASE_SERVICE_ROLE_KEY
+
+Do not hardcode any secrets.
+
+## Deployment
+
+Prepare the project for deployment on Vercel.
+
+Ensure:
+
+* The project builds successfully.
+* No build errors exist.
+* Production environment variables are supported.
+* API routes function correctly.
+* Static assets load correctly.
+* The project is production-ready.
+
+Create a `.env.example` file listing all required environment variables.
+
+Create a production-ready `.gitignore`.
+
+Update the `README.md` with deployment instructions for GitHub, Supabase, and Vercel.
+
+Before finishing, verify that:
+
+* The project builds successfully.
+* Supabase is fully connected.
+* The ticket system works.
+* Staff authentication works.
+* File uploads work.
+* The website is ready to deploy to Vercel without additional configuration.
+
+Do not redesign or replace the existing website. Only implement the backend, database integration, authentication, storage, and deployment configuration.
