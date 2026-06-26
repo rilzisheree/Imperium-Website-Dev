@@ -76,11 +76,12 @@ app.use(
 app.use("/api", router);
 
 // Serve the React frontend in production.
-// The built frontend lives at artifacts/imperium/dist/public relative to the workspace root.
-// When bundled, import.meta.dirname is artifacts/api-server/dist, so we go up two levels.
+// build.mjs copies the frontend dist into dist/public next to the server bundle,
+// making the deployment self-contained regardless of host directory layout.
+// FRONTEND_DIST_PATH can override this for local dev or custom setups.
 const frontendDist =
   process.env.FRONTEND_DIST_PATH ??
-  path.resolve(import.meta.dirname, "../../imperium/dist/public");
+  path.resolve(import.meta.dirname, "public");
 
 if (existsSync(frontendDist)) {
   logger.info({ frontendDist }, "Serving frontend static files");
