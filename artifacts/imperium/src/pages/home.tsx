@@ -3,7 +3,7 @@ import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, useScroll, useTransform } from "framer-motion";
-import orangeServerImg from "@assets/image_1782497587581.png";
+import orangeServerImg from "@assets/image_1782497596023.png";
 
 const DISCORD_URL = "https://discord.gg/7GMcWzJu28";
 
