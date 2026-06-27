@@ -311,10 +311,10 @@ export default function Home() {
                 Connect with thousands of heroes and villains. Get real-time updates, participate in events, and build lasting alliances.
               </p>
 
-              {/* Discord widget placeholder */}
-              <div className="bg-[#36393F]/60 border border-secondary/20 rounded-2xl p-6 mb-8 max-w-sm mx-auto backdrop-blur-sm">
+              {/* Discord widget */}
+              <div className="bg-[#36393F]/60 border border-secondary/20 rounded-2xl p-6 max-w-sm mx-auto backdrop-blur-sm">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary font-bold text-lg">I</div>
+                  <img src="/discord-icon.png" alt="Imperium" className="w-10 h-10 rounded-full object-cover" />
                   <div className="text-left">
                     <p className="text-white font-bold text-sm">Imperium</p>
                     <p className="text-white/40 text-xs">Official Server</p>
@@ -333,15 +333,6 @@ export default function Home() {
                   Join Server
                 </Button>
               </div>
-
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-secondary/50 text-secondary hover:bg-secondary/10 text-base px-10 h-14 shadow-[0_0_20px_-5px_rgba(0,217,255,0.2)]"
-                onClick={() => window.open(DISCORD_URL, "_blank", "noopener,noreferrer")}
-              >
-                discord.gg/7GMcWzJu28
-              </Button>
             </motion.div>
           </div>
         </div>

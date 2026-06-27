@@ -56,9 +56,13 @@ function StaffNav() {
   );
 }
 
+const OWNER_ROLES = ["owner", "developer"];
+
 function LogsContent() {
   const [page, setPage] = useState(1);
   const base = import.meta.env.BASE_URL;
+  const { data: me } = useGetStaffMe();
+  const isOwner = me?.role && OWNER_ROLES.includes(me.role);
 
   const { data, isLoading } = useQuery({
     queryKey: ["login-logs", page],
@@ -96,7 +100,7 @@ function LogsContent() {
                 </div>
                 <div className="flex gap-4 mt-1 text-xs text-white/25 flex-wrap">
                   <span>{new Date(log.createdAt).toLocaleString()}</span>
-                  {log.ipAddress && <span>IP: {log.ipAddress}</span>}
+                  {isOwner && log.ipAddress && <span>IP: {log.ipAddress}</span>}
                   {log.userAgent && <span className="truncate max-w-xs">{log.userAgent.slice(0, 60)}{log.userAgent.length > 60 ? "..." : ""}</span>}
                 </div>
               </div>

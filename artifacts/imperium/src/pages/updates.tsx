@@ -84,8 +84,16 @@ export default function Updates() {
                     </div>
                     <p className="text-white/30 text-sm">{new Date(update.publishedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
                   </div>
+                  {update.imageUrl && (
+                    <img src={update.imageUrl} alt="" className="w-full h-48 object-cover rounded-xl mb-4 border border-white/5" onError={(e) => (e.currentTarget.style.display = "none")} />
+                  )}
                   <h2 className="text-xl font-bold text-white mb-3">{update.title}</h2>
-                  <p className="text-white/60 leading-relaxed line-clamp-4">{update.content}</p>
+                  <div
+                    className="text-white/60 leading-relaxed line-clamp-4 prose-sm
+                      [&_h3]:text-white [&_h3]:font-bold [&_b]:text-white [&_strong]:text-white
+                      [&_ul]:list-disc [&_ul]:pl-4 [&_img]:hidden"
+                    dangerouslySetInnerHTML={{ __html: update.content }}
+                  />
                   <div className="mt-4 flex items-center justify-between">
                     <p className="text-white/30 text-sm">By <span className="text-primary">{update.authorName}</span></p>
                   </div>
