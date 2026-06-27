@@ -5,7 +5,7 @@ import { db } from "@workspace/db";
 import { webhooksTable } from "@workspace/db";
 import { requireStaff, requireOwner } from "../middlewares/auth";
 import { logger } from "../lib/logger";
-import { ALL_WEBHOOK_EVENTS, isDiscordUrl, buildDiscordEmbed, testDeliver } from "../lib/webhooks";
+import { ALL_WEBHOOK_EVENTS, isDiscordUrl, buildDiscordPayload, testDeliver } from "../lib/webhooks";
 
 const router = Router();
 router.use(requireStaff);
@@ -137,7 +137,7 @@ router.post("/:id/test", requireOwner, async (req, res) => {
     const testData = { webhookId: webhook.id, webhookName: webhook.name };
 
     const body = discord
-      ? JSON.stringify(buildDiscordEmbed("test", testData))
+      ? JSON.stringify(buildDiscordPayload("test", testData))
       : JSON.stringify({ event: "test", timestamp: new Date().toISOString(), data: testData });
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };

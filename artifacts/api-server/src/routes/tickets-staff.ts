@@ -336,7 +336,7 @@ router.post("/:ticketId/notes", async (req, res) => {
     fireWebhooks("ticket.note_added", {
       ticketCode: ticket.ticketCode,
       type: ticket.type,
-      authorName,
+      addedBy: authorName,
       note: note.trim(),
     }).catch(() => {});
 
