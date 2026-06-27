@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRoute, useLocation } from "wouter";
 import {
   useGetTicketById,
@@ -182,6 +182,62 @@ function TicketDetailContent() {
   const [replyText, setReplyText] = useState("");
   const [noteText, setNoteText] = useState("");
   const [activeTab, setActiveTab] = useState<"replies" | "notes" | "timeline">("replies");
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    if (!data) return;
+    const { ticket } = data;
+
+    const typeLabel: Record<string, string> = {
+      "report-user": "Report User",
+      "appeal-ban": "Appeal Ban",
+      "appeal-character-death": "Appeal Character Death",
+      "permadeath-event": "Permadeath Event",
+    };
+    const statusLabel = ticket.status.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const ticketUrl = `${window.location.origin}/staff/tickets/${ticket.id}`;
+    const submitted = new Date(ticket.createdAt).toLocaleString("en-GB", {
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+
+    const lines: string[] = [
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      `🎫  TICKET ${ticket.ticketCode}`,
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      `📋  Type       ${typeLabel[ticket.type] ?? ticket.type}`,
+      `📊  Status     ${statusLabel}`,
+      `🕐  Submitted  ${submitted}`,
+      `🔗  Link       ${ticketUrl}`,
+      "",
+      "👤  PLAYER INFO",
+      `    Roblox:    ${ticket.robloxUsername}`,
+      `    Discord:   ${ticket.discordUsername}`,
+    ];
+
+    if (ticket.email) {
+      lines.push(`    Email:     ${ticket.email}`);
+    }
+
+    lines.push("", `📝  SUBJECT`, `    ${ticket.subject}`);
+
+    if (ticket.reason) {
+      lines.push("", `📄  REASON`);
+      ticket.reason.split("\n").forEach((l) => lines.push(`    ${l}`));
+    }
+
+    if (ticket.additionalInfo) {
+      lines.push("", `📎  ADDITIONAL INFO`);
+      ticket.additionalInfo.split("\n").forEach((l) => lines.push(`    ${l}`));
+    }
+
+    lines.push("", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    navigator.clipboard.writeText(lines.join("\n")).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [data]);
 
   if (isLoading) return <div className="text-center py-20 text-white/30">Loading ticket...</div>;
   if (!data) return <div className="text-center py-20 text-red-400">Ticket not found.</div>;
@@ -227,9 +283,35 @@ function TicketDetailContent() {
                 <span className="text-primary font-mono font-black text-2xl tracking-widest">{ticket.ticketCode}</span>
                 <p className="text-white/40 text-sm mt-1 capitalize">{ticket.type.replace(/-/g, " ")}</p>
               </div>
-              <span className={`px-3 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider ${statusColors[ticket.status] ?? "bg-gray-500/20 text-gray-300 border-gray-500/30"}`}>
-                {ticket.status.replace(/-/g, " ")}
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`px-3 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider ${statusColors[ticket.status] ?? "bg-gray-500/20 text-gray-300 border-gray-500/30"}`}>
+                  {ticket.status.replace(/-/g, " ")}
+                </span>
+                <button
+                  onClick={handleCopy}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold tracking-wide transition-all duration-200 ${
+                    copied
+                      ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
+                      : "bg-white/5 border-white/15 text-white/50 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
+                  }`}
+                >
+                  {copied ? (
+                    <>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copy Ticket
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
             <h2 className="text-xl font-bold text-white mb-4">{ticket.subject}</h2>
             <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
