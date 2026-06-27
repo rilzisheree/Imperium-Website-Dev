@@ -5,7 +5,13 @@ import { db } from "@workspace/db";
 import { webhooksTable } from "@workspace/db";
 import { requireStaff, requireOwner } from "../middlewares/auth";
 import { logger } from "../lib/logger";
-import { ALL_WEBHOOK_EVENTS, isDiscordUrl, buildDiscordPayload, testDeliver } from "../lib/webhooks";
+import {
+  ALL_WEBHOOK_EVENTS,
+  isDiscordUrl,
+  buildDiscordPayload,
+  testDeliver,
+  testDeliverViaBot,
+} from "../lib/webhooks";
 
 const router = Router();
 router.use(requireStaff);
@@ -14,7 +20,8 @@ function formatWebhook(w: typeof webhooksTable.$inferSelect) {
   return {
     id: w.id,
     name: w.name,
-    url: w.url,
+    url: w.url ?? null,
+    discordChannelId: w.discordChannelId ?? null,
     events: w.events ?? [],
     secret: w.secret ? "••••••••" : null,
     active: w.active,
@@ -37,16 +44,26 @@ router.get("/", async (_req, res) => {
 // POST /api/staff/webhooks — owner only
 router.post("/", requireOwner, async (req, res) => {
   try {
-    const { name, url, events, secret } = req.body;
+    const { name, url, discordChannelId, events, secret } = req.body;
 
-    if (!name?.trim() || !url?.trim()) {
-      res.status(400).json({ error: "Name and URL are required" });
+    if (!name?.trim()) {
+      res.status(400).json({ error: "Name is required" });
       return;
     }
 
-    try { new URL(url); } catch {
-      res.status(400).json({ error: "Invalid URL" });
+    const trimmedUrl = url?.trim() || null;
+    const trimmedChannelId = discordChannelId?.trim() || null;
+
+    if (!trimmedUrl && !trimmedChannelId) {
+      res.status(400).json({ error: "Either a Webhook URL or a Discord Channel ID is required" });
       return;
+    }
+
+    if (trimmedUrl) {
+      try { new URL(trimmedUrl); } catch {
+        res.status(400).json({ error: "Invalid URL" });
+        return;
+      }
     }
 
     const validEvents = ALL_WEBHOOK_EVENTS as string[];
@@ -61,7 +78,8 @@ router.post("/", requireOwner, async (req, res) => {
 
     const [webhook] = await db.insert(webhooksTable).values({
       name: name.trim(),
-      url: url.trim(),
+      url: trimmedUrl,
+      discordChannelId: trimmedChannelId,
       events: parsedEvents,
       secret: secret?.trim() || null,
       active: true,
@@ -80,19 +98,23 @@ router.patch("/:id", requireOwner, async (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
 
-    const { name, url, events, secret, active } = req.body;
-
     const [existing] = await db.select().from(webhooksTable).where(eq(webhooksTable.id, id)).limit(1);
     if (!existing) { res.status(404).json({ error: "Webhook not found" }); return; }
 
+    const { name, url, discordChannelId, events, secret, active } = req.body;
     const validEvents = ALL_WEBHOOK_EVENTS as string[];
     const update: Partial<typeof webhooksTable.$inferInsert> = { updatedAt: new Date() };
 
     if (name !== undefined) update.name = name.trim();
     if (url !== undefined) {
-      try { new URL(url); } catch { res.status(400).json({ error: "Invalid URL" }); return; }
-      update.url = url.trim();
+      if (url) {
+        try { new URL(url); } catch { res.status(400).json({ error: "Invalid URL" }); return; }
+        update.url = url.trim();
+      } else {
+        update.url = null;
+      }
     }
+    if (discordChannelId !== undefined) update.discordChannelId = discordChannelId?.trim() || null;
     if (events !== undefined) {
       update.events = Array.isArray(events) ? events.filter((e: string) => validEvents.includes(e)) : existing.events;
     }
@@ -124,7 +146,7 @@ router.delete("/:id", requireOwner, async (req, res) => {
   }
 });
 
-// POST /api/staff/webhooks/:id/test — sends a test payload and returns immediately
+// POST /api/staff/webhooks/:id/test
 router.post("/:id/test", requireOwner, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
@@ -133,30 +155,57 @@ router.post("/:id/test", requireOwner, async (req, res) => {
     const [webhook] = await db.select().from(webhooksTable).where(eq(webhooksTable.id, id)).limit(1);
     if (!webhook) { res.status(404).json({ error: "Webhook not found" }); return; }
 
-    const discord = isDiscordUrl(webhook.url);
     const testData = { webhookId: webhook.id, webhookName: webhook.name };
 
-    const body = discord
-      ? JSON.stringify(buildDiscordPayload("test", testData))
-      : JSON.stringify({ event: "test", timestamp: new Date().toISOString(), data: testData });
-
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (webhook.secret && !discord) {
-      const sig = crypto.createHmac("sha256", webhook.secret).update(body).digest("hex");
-      headers["X-Webhook-Signature"] = `sha256=${sig}`;
+    // Bot delivery via channel ID
+    if (webhook.discordChannelId) {
+      try {
+        const result = await testDeliverViaBot(webhook.discordChannelId, webhook.id, webhook.name);
+        res.json({
+          success: result.ok,
+          status: result.status,
+          rateLimited: result.rateLimited,
+          retryAfterMs: result.retryAfterMs,
+          detail: result.ok ? undefined : result.body,
+        });
+      } catch (err: any) {
+        res.status(200).json({ success: false, status: 0, rateLimited: false, retryAfterMs: 0, error: err?.message ?? "Bot delivery failed" });
+      }
+      return;
     }
 
-    const result = await testDeliver(webhook.url, body, headers);
-    res.json({
-      success: result.ok,
-      status: result.status,
-      rateLimited: result.rateLimited,
-      retryAfterMs: result.retryAfterMs,
-      detail: result.ok ? undefined : result.body,
-    });
+    // Webhook URL delivery
+    if (webhook.url) {
+      const discord = isDiscordUrl(webhook.url);
+      const body = discord
+        ? JSON.stringify(buildDiscordPayload("test", testData))
+        : JSON.stringify({ event: "test", timestamp: new Date().toISOString(), data: testData });
+
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (webhook.secret && !discord) {
+        const sig = crypto.createHmac("sha256", webhook.secret).update(body).digest("hex");
+        headers["X-Webhook-Signature"] = `sha256=${sig}`;
+      }
+
+      try {
+        const result = await testDeliver(webhook.url, body, headers);
+        res.json({
+          success: result.ok,
+          status: result.status,
+          rateLimited: result.rateLimited,
+          retryAfterMs: result.retryAfterMs,
+          detail: result.ok ? undefined : result.body,
+        });
+      } catch (err: any) {
+        res.status(200).json({ success: false, status: 0, rateLimited: false, retryAfterMs: 0, error: err?.message ?? "Request timed out or failed" });
+      }
+      return;
+    }
+
+    res.status(400).json({ error: "Webhook has no URL or channel ID configured" });
   } catch (err: any) {
     logger.warn({ err }, "Test webhook failed");
-    res.status(200).json({ success: false, status: 0, rateLimited: false, retryAfterMs: 0, error: err?.message ?? "Request timed out or failed" });
+    res.status(200).json({ success: false, status: 0, rateLimited: false, retryAfterMs: 0, error: err?.message ?? "Unexpected error" });
   }
 });
 

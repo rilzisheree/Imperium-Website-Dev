@@ -3,7 +3,8 @@ import { pgTable, serial, text, boolean, timestamp } from "drizzle-orm/pg-core";
 export const webhooksTable = pgTable("webhooks", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  url: text("url").notNull(),
+  url: text("url"),
+  discordChannelId: text("discord_channel_id"),
   events: text("events").array().notNull().default([]),
   secret: text("secret"),
   active: boolean("active").notNull().default(true),
