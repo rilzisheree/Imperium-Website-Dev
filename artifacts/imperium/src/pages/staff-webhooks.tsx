@@ -104,17 +104,53 @@ function useWebhooks() {
   });
 }
 
-function RateLimitCountdown({ retryAfterMs, onDone }: { retryAfterMs: number; onDone: () => void }) {
-  const [remaining, setRemaining] = useState(Math.ceil(retryAfterMs / 1000));
+const LONG_BAN_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes — anything longer is a Discord ban
+
+function formatDuration(ms: number): string {
+  const totalSec = Math.ceil(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+function RateLimitBanner({ retryAfterMs, onDismiss }: { retryAfterMs: number; onDismiss: () => void }) {
+  const [remaining, setRemaining] = useState(retryAfterMs);
+
+  const isBan = retryAfterMs >= LONG_BAN_THRESHOLD_MS;
 
   useEffect(() => {
-    if (remaining <= 0) { onDone(); return; }
-    const t = setInterval(() => setRemaining((s) => {
-      if (s <= 1) { clearInterval(t); onDone(); return 0; }
-      return s - 1;
-    }), 1000);
+    if (isBan) return;
+    const t = setInterval(() => {
+      setRemaining((s) => {
+        const next = s - 1000;
+        if (next <= 0) { clearInterval(t); onDismiss(); return 0; }
+        return next;
+      });
+    }, 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [isBan]);
+
+  if (isBan) {
+    return (
+      <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+        className="rounded-lg bg-red-500/10 border border-red-500/25 text-red-300 text-xs p-4 space-y-2">
+        <div className="flex items-center gap-2 font-semibold">
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+          </svg>
+          Discord has banned this webhook URL ({formatDuration(retryAfterMs)} cooldown)
+        </div>
+        <p className="text-red-400/70 leading-relaxed">
+          This happens when a webhook is hit too many times in a short period. The URL itself is blocked by Discord and cannot be recovered.
+          <strong className="text-red-300"> Go to your Discord server → Server Settings → Integrations → Webhooks, delete this webhook and create a new one, then update the URL here.</strong>
+        </p>
+        <button onClick={onDismiss} className="text-red-400/50 hover:text-red-400 underline transition-colors">Dismiss</button>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
@@ -123,7 +159,7 @@ function RateLimitCountdown({ retryAfterMs, onDone }: { retryAfterMs: number; on
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
       </svg>
-      <span>Discord rate limited — retrying in <strong>{remaining}s</strong></span>
+      <span>Discord rate limited — try again in <strong>{formatDuration(remaining)}</strong></span>
     </motion.div>
   );
 }
@@ -358,8 +394,8 @@ function WebhookCard({ webhook, onRefresh }: { webhook: Webhook; onRefresh: () =
 
           <div className="flex items-center gap-1.5 shrink-0">
             <Button size="sm" variant="outline"
-              onClick={() => { setTestResult(null); testMutation.mutate(); }}
-              disabled={testMutation.isPending || rateLimitCountdown > 0}
+              onClick={() => { setTestResult(null); setRateLimitCountdown(0); testMutation.mutate(); }}
+              disabled={testMutation.isPending || (rateLimitCountdown > 0 && rateLimitCountdown < LONG_BAN_THRESHOLD_MS)}
               className="border-white/10 text-white/50 hover:text-white hover:border-white/25 text-xs h-7 px-3 gap-1.5">
               {testMutation.isPending ? (
                 <>
@@ -369,8 +405,8 @@ function WebhookCard({ webhook, onRefresh }: { webhook: Webhook; onRefresh: () =
                   </svg>
                   Sending…
                 </>
-              ) : rateLimitCountdown > 0 ? (
-                `Wait ${Math.ceil(rateLimitCountdown / 1000)}s`
+              ) : rateLimitCountdown > 0 && rateLimitCountdown < LONG_BAN_THRESHOLD_MS ? (
+                `Wait ${formatDuration(rateLimitCountdown)}`
               ) : (
                 <>
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,9 +466,9 @@ function WebhookCard({ webhook, onRefresh }: { webhook: Webhook; onRefresh: () =
       <AnimatePresence>
         {rateLimitCountdown > 0 && (
           <div className="px-5 pb-4">
-            <RateLimitCountdown
+            <RateLimitBanner
               retryAfterMs={rateLimitCountdown}
-              onDone={() => setRateLimitCountdown(0)}
+              onDismiss={() => setRateLimitCountdown(0)}
             />
           </div>
         )}
