@@ -1,0 +1,116 @@
+* Don't let the player able to see the timeline and like what happend to his tickets
+* Note's in Staff Portal don't work btw 
+* Don't make it so the player can actually see who's the ticket was assigned to 
+* Add a button to send an already written message to the player for each catagory, such as; 
+
+## Report a user
+
+Pending (This will be sent immeditaly by the System once a user submits a ticket)
+
+Your report has been successfully submitted and is currently pending review. A staff member will begin looking into it as soon as possible. Thank you for your patience.
+
+Under Investigation
+
+Your report is currently under investigation. Staff are reviewing the evidence and gathering any necessary information. Please avoid discussing the report publicly while the investigation is ongoing.
+
+Accepted
+
+Your report has been accepted. After reviewing the evidence, staff determined that the report was valid and appropriate action has been or will be taken. Thank you for helping keep the community safe.
+
+Denied
+
+Your report has been denied. After reviewing the available evidence, staff determined that the report does not warrant action at this time. This may be due to insufficient evidence, lack of a rule violation, or the report being invalid.
+
+Resolved
+
+Your report has been resolved. The investigation has concluded, and any necessary actions have been completed. Thank you for your report.
+
+Closed
+
+This report has been closed. No further action will be taken, and the case is now archived. If you have new evidence regarding this incident, you may submit a new report.
+
+- 
+
+## Appeal Your Ban
+
+Pending (This will be sent immeditaly by the System once a user submits a ticket)
+
+Your ban appeal has been submitted and is pending review. An administrator will review your appeal as soon as possible.
+
+Awaiting User
+
+We require additional information before your appeal can proceed. Please respond with the requested details to avoid delays.
+
+Under Investigation
+
+Your ban appeal is currently under review. Staff are examining the circumstances surrounding your ban and any evidence provided.
+
+Accepted
+
+Your ban appeal has been accepted. Your ban has been lifted or reduced in accordance with the administration team's decision. Please ensure future compliance with the server's rules.
+
+Denied
+
+Your ban appeal has been denied. After reviewing your appeal and the available evidence, the original punishment will remain in effect.
+
+Resolved
+
+Your ban appeal has been resolved. A final decision has been reached, and any necessary actions have been completed.
+
+Closed
+
+This appeal has been closed. If you believe new evidence exists, you may submit a new appeal when eligible.
+
+## Appeal Your Character's Death
+
+Pending (This will be sent immeditaly by the System once a user submits a ticket)
+
+Your character death appeal has been submitted and is pending review by the administration team.
+
+Awaiting User
+
+Additional information or evidence is required before we can continue reviewing your appeal. Please respond when possible.
+
+Under Investigation
+
+Your character death appeal is currently under investigation. Staff are reviewing logs, recordings, and the circumstances surrounding the incident.
+
+Accepted
+
+Your appeal has been accepted. Staff have determined that your character's death was invalid, and your character will be restored. Please open a Staff ticket in the main discord to get fully restored.
+
+Denied
+
+Your appeal has been denied. Staff determined that the character's death was valid and will remain permanent.
+
+Resolved
+
+Your character death appeal has been resolved. A final decision has been made.
+
+Closed
+
+This appeal has been closed. No further action will be taken unless new evidence is presented.
+
+- 
+
+## Request a Permadeath Event
+
+Pending (This will be sent immeditaly by the System once a user submits a ticket)
+
+Your Permadeath Event request has been submitted and is pending review.
+
+Awaiting User
+
+We require additional details regarding your event before we can continue reviewing your request.
+
+Under Investigation
+
+Your Permadeath Event request is currently being reviewed. Lore Team are evaluating its lore, planning, and overall feasibility.
+
+Accepted
+
+Your Permadeath Event request has been approved. Lore Team will coordinate with you regarding scheduling and any final preparations. Please open a Lore Ticket to continue.
+
+Denied
+
+Your Permadeath Event request has been denied. At this time, the proposal does not meet the necessary requirements or l

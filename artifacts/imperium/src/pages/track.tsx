@@ -17,14 +17,6 @@ const statusColors: Record<string, string> = {
   closed: "bg-gray-500/20 text-gray-400 border-gray-500/30",
 };
 
-const eventIcons: Record<string, string> = {
-  created: "○",
-  status_changed: "◆",
-  replied: "●",
-  assigned: "▲",
-  note_added: "■",
-};
-
 function StatusBadge({ status }: { status: string }) {
   const colors = statusColors[status] ?? "bg-gray-500/20 text-gray-400 border-gray-500/30";
   const label = status.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -122,7 +114,6 @@ export default function Track() {
                       ["Type", result.ticket.type.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())],
                       ["Subject", result.ticket.subject],
                       ["Roblox Username", result.ticket.robloxUsername],
-                      ["Assigned To", result.ticket.assignedToName ?? "Unassigned"],
                       ["Submitted", new Date(result.ticket.createdAt).toLocaleDateString()],
                       ["Last Updated", new Date(result.ticket.updatedAt).toLocaleDateString()],
                     ].map(([label, value]) => (
@@ -133,25 +124,6 @@ export default function Track() {
                     ))}
                   </div>
                 </div>
-
-                {/* Timeline */}
-                {result.timeline.length > 0 && (
-                  <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-                    <h3 className="text-white font-bold text-lg mb-4">Timeline</h3>
-                    <div className="space-y-3">
-                      {result.timeline.map((event) => (
-                        <div key={event.id} className="flex items-start gap-3 text-sm">
-                          <span className="text-primary mt-0.5 w-4 text-center flex-shrink-0">{eventIcons[event.eventType] ?? "○"}</span>
-                          <div>
-                            <span className="text-white/80">{event.description}</span>
-                            {event.actorName && <span className="text-white/40 ml-2">by {event.actorName}</span>}
-                            <p className="text-white/30 text-xs mt-0.5">{new Date(event.createdAt).toLocaleString()}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* Staff Replies */}
                 {result.replies.length > 0 && (

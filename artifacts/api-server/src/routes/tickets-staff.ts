@@ -260,6 +260,25 @@ router.delete("/:ticketId/delete", async (req, res) => {
   }
 });
 
+// GET /api/staff/tickets/:ticketId/notes
+router.get("/:ticketId/notes", async (req, res) => {
+  try {
+    const ticketId = parseInt(req.params.ticketId);
+    if (isNaN(ticketId)) { res.status(400).json({ error: "Invalid ticket ID" }); return; }
+
+    const [ticket] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticketId)).limit(1);
+    if (!ticket) { res.status(404).json({ error: "Ticket not found" }); return; }
+
+    const notes = await db.select().from(ticketNotesTable).where(eq(ticketNotesTable.ticketId, ticketId)).orderBy(ticketNotesTable.createdAt);
+
+    res.json(notes.map((n) => ({
+      id: n.id, ticketId: n.ticketId, authorName: n.authorName, note: n.note, createdAt: n.createdAt.toISOString(),
+    })));
+  } catch (err) {
+    logger.error({ err }, "Failed to get notes"); res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // POST /api/staff/tickets/:ticketId/notes
 router.post("/:ticketId/notes", async (req, res) => {
   try {

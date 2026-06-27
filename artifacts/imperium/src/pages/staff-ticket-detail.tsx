@@ -39,6 +39,44 @@ const eventIcons: Record<string, string> = {
   note_added: "■",
 };
 
+const presetMessages: Record<string, Record<string, string>> = {
+  "report-user": {
+    pending: "Your report has been successfully submitted and is currently pending review. A staff member will begin looking into it as soon as possible. Thank you for your patience.",
+    "under-investigation": "Your report is currently under investigation. Staff are reviewing the evidence and gathering any necessary information. Please avoid discussing the report publicly while the investigation is ongoing.",
+    accepted: "Your report has been accepted. After reviewing the evidence, staff determined that the report was valid and appropriate action has been or will be taken. Thank you for helping keep the community safe.",
+    denied: "Your report has been denied. After reviewing the available evidence, staff determined that the report does not warrant action at this time. This may be due to insufficient evidence, lack of a rule violation, or the report being invalid.",
+    resolved: "Your report has been resolved. The investigation has concluded, and any necessary actions have been completed. Thank you for your report.",
+    closed: "This report has been closed. No further action will be taken, and the case is now archived. If you have new evidence regarding this incident, you may submit a new report.",
+  },
+  "appeal-ban": {
+    pending: "Your ban appeal has been submitted and is pending review. An administrator will review your appeal as soon as possible.",
+    "awaiting-user": "We require additional information before your appeal can proceed. Please respond with the requested details to avoid delays.",
+    "under-investigation": "Your ban appeal is currently under review. Staff are examining the circumstances surrounding your ban and any evidence provided.",
+    accepted: "Your ban appeal has been accepted. Your ban has been lifted or reduced in accordance with the administration team's decision. Please ensure future compliance with the server's rules.",
+    denied: "Your ban appeal has been denied. After reviewing your appeal and the available evidence, the original punishment will remain in effect.",
+    resolved: "Your ban appeal has been resolved. A final decision has been reached, and any necessary actions have been completed.",
+    closed: "This appeal has been closed. If you believe new evidence exists, you may submit a new appeal when eligible.",
+  },
+  "appeal-character-death": {
+    pending: "Your character death appeal has been submitted and is pending review by the administration team.",
+    "awaiting-user": "Additional information or evidence is required before we can continue reviewing your appeal. Please respond when possible.",
+    "under-investigation": "Your character death appeal is currently under investigation. Staff are reviewing logs, recordings, and the circumstances surrounding the incident.",
+    accepted: "Your appeal has been accepted. Staff have determined that your character's death was invalid, and your character will be restored. Please open a Staff ticket in the main discord to get fully restored.",
+    denied: "Your appeal has been denied. Staff determined that the character's death was valid and will remain permanent.",
+    resolved: "Your character death appeal has been resolved. A final decision has been made.",
+    closed: "This appeal has been closed. No further action will be taken unless new evidence is presented.",
+  },
+  "permadeath-event": {
+    pending: "Your Permadeath Event request has been submitted and is pending review.",
+    "awaiting-user": "We require additional details regarding your event before we can continue reviewing your request.",
+    "under-investigation": "Your Permadeath Event request is currently being reviewed. Lore Team are evaluating its lore, planning, and overall feasibility.",
+    accepted: "Your Permadeath Event request has been approved. Lore Team will coordinate with you regarding scheduling and any final preparations. Please open a Lore Ticket to continue.",
+    denied: "Your Permadeath Event request has been denied. At this time, the proposal does not meet the necessary requirements or lore standards.",
+    resolved: "Your Permadeath Event request has been resolved. A final decision has been made.",
+    closed: "This request has been closed. No further action will be taken.",
+  },
+};
+
 function StaffHeader() {
   const { data: me } = useGetStaffMe();
   const logout = useStaffLogout();
@@ -251,6 +289,23 @@ function TicketDetailContent() {
                 ))}
                 {replies.length === 0 && <p className="text-white/30 text-sm py-4">No replies yet.</p>}
                 <div className="space-y-2">
+                  {presetMessages[ticket.type] && Object.keys(presetMessages[ticket.type]).length > 0 && (
+                    <div className="bg-white/2 border border-white/8 rounded-lg p-3">
+                      <p className="text-white/30 text-xs uppercase tracking-widest mb-2">Quick Replies</p>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(presetMessages[ticket.type]).map(([status, message]) => (
+                          <button
+                            key={status}
+                            type="button"
+                            onClick={() => setReplyText(message)}
+                            className="px-3 py-1.5 rounded-md text-xs border border-white/10 text-white/50 hover:text-white hover:border-primary/40 transition-all capitalize"
+                          >
+                            {status.replace(/-/g, " ")}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <Textarea
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
