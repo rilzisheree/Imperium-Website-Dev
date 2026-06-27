@@ -224,6 +224,7 @@ router.delete("/members/:memberId", requireOwner, async (req, res) => {
     const [member] = await db.select().from(staffMembersTable).where(eq(staffMembersTable.id, memberId)).limit(1);
     if (!member) { res.status(404).json({ error: "Member not found" }); return; }
 
+    await db.delete(loginEventsTable).where(eq(loginEventsTable.staffId, memberId));
     await db.delete(staffMembersTable).where(eq(staffMembersTable.id, memberId));
     res.json({ message: "Member deleted" });
   } catch (err) {

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useGetStaffMe, useStaffLogout } from "@workspace/api-client-react";
 import { StaffGuard } from "@/components/staff-guard";
 import { Button } from "@/components/ui/button";
@@ -50,8 +50,16 @@ const ADMIN_ROLES = ["owner", "developer", "administrator", "head-administrator"
 /* ──────────────────────────────────────────────
    Rich Text Editor
 ────────────────────────────────────────────── */
-function RichEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function RichEditor({ onChange }: { value: string; onChange: (v: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
+
+  // Set initial content once on mount — never update innerHTML from React after that
+  // (updating dangerouslySetInnerHTML on every keystroke resets the cursor to position 0)
+  useEffect(() => {
+    if (ref.current && ref.current.innerHTML === "") {
+      ref.current.innerHTML = "";
+    }
+  }, []);
 
   const exec = useCallback((cmd: string, val?: string) => {
     ref.current?.focus();
@@ -89,18 +97,18 @@ function RichEditor({ value, onChange }: { value: string; onChange: (v: string) 
           </button>
         ))}
       </div>
-      {/* Editable area */}
+      {/* Editable area — uncontrolled: React never touches innerHTML after mount */}
       <div
         ref={ref}
         contentEditable
         suppressContentEditableWarning
         onInput={() => { if (ref.current) onChange(ref.current.innerHTML); }}
-        dangerouslySetInnerHTML={{ __html: value }}
         className="min-h-[140px] p-3 text-white/80 text-sm leading-relaxed outline-none bg-white/3
           [&_h3]:text-white [&_h3]:font-bold [&_h3]:text-base [&_h3]:mb-1
           [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5
           [&_b]:text-white [&_strong]:text-white
           [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-2 [&_img]:border [&_img]:border-white/10"
+        data-placeholder="Write your post content here..."
       />
     </div>
   );
@@ -115,6 +123,7 @@ function PostsPanel() {
 
   const blankForm = { title: "", content: "", category: "announcement", pinned: false, imageUrl: "" };
   const [form, setForm] = useState(blankForm);
+  const [editorKey, setEditorKey] = useState(0);
   const [error, setError] = useState("");
 
   const { data: posts, refetch } = useQuery<Post[]>({
@@ -146,6 +155,7 @@ function PostsPanel() {
     },
     onSuccess: () => {
       setForm(blankForm);
+      setEditorKey((k) => k + 1);
       setError("");
       refetch();
       qc.invalidateQueries({ queryKey: ["updates"] });
@@ -208,7 +218,7 @@ function PostsPanel() {
         {/* Rich text content */}
         <div className="space-y-1.5">
           <Label className="text-white/60 text-xs">Content</Label>
-          <RichEditor value={form.content} onChange={(v) => setForm((f) => ({ ...f, content: v }))} />
+          <RichEditor key={editorKey} value={form.content} onChange={(v) => setForm((f) => ({ ...f, content: v }))} />
         </div>
 
         {/* Banner image URL */}
