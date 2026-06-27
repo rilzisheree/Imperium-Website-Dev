@@ -21,7 +21,7 @@ function formatUpdate(u: typeof updatesTable.$inferSelect) {
   };
 }
 
-// GET /api/updates — public
+// GET /api/updates — public list
 router.get("/", async (req, res) => {
   try {
     const { category, pinned, page = "1" } = req.query as Record<string, string>;
@@ -29,7 +29,6 @@ router.get("/", async (req, res) => {
     const limit = 20;
     const offset = (pageNum - 1) * limit;
 
-    let query = db.select().from(updatesTable);
     const conditions: ReturnType<typeof eq>[] = [];
     if (category) conditions.push(eq(updatesTable.category, category));
     if (pinned === "true") conditions.push(eq(updatesTable.pinned, true));
@@ -49,30 +48,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/updates/:id — public
-router.get("/:updateId", async (req, res) => {
-  try {
-    const updateId = parseInt(req.params.updateId as string);
-    if (isNaN(updateId)) {
-      res.status(400).json({ error: "Invalid update ID" });
-      return;
-    }
-
-    const [update] = await db.select().from(updatesTable).where(eq(updatesTable.id, updateId)).limit(1);
-    if (!update) {
-      res.status(404).json({ error: "Update not found" });
-      return;
-    }
-
-    res.json(formatUpdate(update));
-  } catch (err) {
-    logger.error({ err }, "Failed to get update");
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// POST /api/staff/updates — admin only
-router.post("/staff", requireAdmin, async (req, res) => {
+// POST /api/staff/updates — admin only (create)
+router.post("/", requireAdmin, async (req, res) => {
   try {
     const { title, content, category, pinned, imageUrl } = req.body;
     const session = (req as any).session;
@@ -100,28 +77,30 @@ router.post("/staff", requireAdmin, async (req, res) => {
   }
 });
 
-// DELETE /api/staff/updates/:id — admin only
-router.delete("/staff/:updateId", requireAdmin, async (req, res) => {
+// GET /api/updates/:id — public single
+router.get("/:updateId", async (req, res) => {
   try {
     const updateId = parseInt(req.params.updateId as string);
     if (isNaN(updateId)) {
       res.status(400).json({ error: "Invalid update ID" });
       return;
     }
-    const [deleted] = await db.delete(updatesTable).where(eq(updatesTable.id, updateId)).returning();
-    if (!deleted) {
+
+    const [update] = await db.select().from(updatesTable).where(eq(updatesTable.id, updateId)).limit(1);
+    if (!update) {
       res.status(404).json({ error: "Update not found" });
       return;
     }
-    res.json({ ok: true });
+
+    res.json(formatUpdate(update));
   } catch (err) {
-    logger.error({ err }, "Failed to delete update");
+    logger.error({ err }, "Failed to get update");
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// PATCH /api/staff/updates/:id — admin only
-router.patch("/staff/:updateId", requireAdmin, async (req, res) => {
+// PATCH /api/staff/updates/:id — admin only (edit)
+router.patch("/:updateId", requireAdmin, async (req, res) => {
   try {
     const updateId = parseInt(req.params.updateId as string);
     const { title, content, category, pinned, imageUrl } = req.body;
@@ -144,6 +123,26 @@ router.patch("/staff/:updateId", requireAdmin, async (req, res) => {
     res.json(formatUpdate(updated));
   } catch (err) {
     logger.error({ err }, "Failed to edit update");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// DELETE /api/staff/updates/:id — admin only
+router.delete("/:updateId", requireAdmin, async (req, res) => {
+  try {
+    const updateId = parseInt(req.params.updateId as string);
+    if (isNaN(updateId)) {
+      res.status(400).json({ error: "Invalid update ID" });
+      return;
+    }
+    const [deleted] = await db.delete(updatesTable).where(eq(updatesTable.id, updateId)).returning();
+    if (!deleted) {
+      res.status(404).json({ error: "Update not found" });
+      return;
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, "Failed to delete update");
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -69,17 +69,11 @@ export function Layout({ children }: { children: ReactNode }) {
             <Button
               variant="outline"
               size="sm"
-              className="hidden sm:flex border-secondary/50 text-secondary hover:bg-secondary/10 hover:text-secondary shadow-[0_0_12px_-3px_rgba(0,217,255,0.2)] text-sm"
+              className="hidden sm:flex items-center gap-2 border-secondary/50 text-secondary hover:bg-secondary/10 hover:text-secondary shadow-[0_0_12px_-3px_rgba(0,217,255,0.2)] text-sm"
               onClick={() => window.open(DISCORD_URL, "_blank", "noopener,noreferrer")}
             >
+              <img src="/discord-icon.png" alt="" className="w-5 h-5 rounded-sm object-cover" />
               Discord
-            </Button>
-            <Button
-              size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_12px_-3px_rgba(255,210,63,0.4)] text-sm font-bold"
-              onClick={() => window.open(ROBLOX_URL, "_blank", "noopener,noreferrer")}
-            >
-              Play
             </Button>
             <button
               className="md:hidden text-white/60 hover:text-white p-1 ml-1"
@@ -124,17 +118,11 @@ export function Layout({ children }: { children: ReactNode }) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 border-secondary/50 text-secondary hover:bg-secondary/10"
+                    className="flex-1 flex items-center gap-2 border-secondary/50 text-secondary hover:bg-secondary/10"
                     onClick={() => { window.open(DISCORD_URL, "_blank", "noopener,noreferrer"); setMobileOpen(false); }}
                   >
+                    <img src="/discord-icon.png" alt="" className="w-4 h-4 rounded-sm object-cover" />
                     Discord
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-primary text-primary-foreground"
-                    onClick={() => { window.open(ROBLOX_URL, "_blank", "noopener,noreferrer"); setMobileOpen(false); }}
-                  >
-                    Play
                   </Button>
                 </div>
               </nav>

@@ -97,7 +97,7 @@ function TicketForm({ type, onClose, onSuccess }: TicketFormProps) {
           value={form[key] as string}
           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
           placeholder={placeholder}
-          className="bg-white/5 border-white/10 text-white placeholder:text-white/30 min-h-[100px] resize-none"
+          className="bg-white/5 border-white/10 text-white placeholder:text-white/30 min-h-[120px] resize-none text-base"
         />
       ) : (
         <Input
@@ -105,7 +105,7 @@ function TicketForm({ type, onClose, onSuccess }: TicketFormProps) {
           value={form[key] as string}
           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
           placeholder={placeholder}
-          className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+          className="bg-white/5 border-white/10 text-white placeholder:text-white/30 h-12 text-base"
         />
       )}
     </div>
@@ -220,7 +220,7 @@ export default function Support() {
 
       {/* Ticket Form Dialog */}
       <Dialog open={!!activeType} onOpenChange={(open) => { if (!open) setActiveType(null); }}>
-        <DialogContent className="bg-[#0f0f1a] border-white/10 text-white max-w-lg w-full">
+        <DialogContent className="bg-[#0f0f1a] border-white/10 text-white max-w-xl w-full">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-primary">{activeType?.title}</DialogTitle>
           </DialogHeader>

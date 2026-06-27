@@ -50,6 +50,7 @@ function StaffHeader() {
           <a href="/" className="text-primary font-black tracking-widest text-lg">IMPERIUM</a>
           <span className="text-white/20">|</span>
           <span className="text-white/40 text-sm">Staff Portal</span>
+          <a href="/" className="text-white/25 text-xs hover:text-primary transition-colors hidden sm:flex items-center gap-1">← Site</a>
         </div>
         <nav className="hidden md:flex items-center gap-5 text-sm">
           {[
@@ -196,7 +197,6 @@ function TicketDetailContent() {
               {[
                 ["Roblox Username", ticket.robloxUsername],
                 ["Discord", ticket.discordUsername],
-                ["Email", ticket.email],
                 ["Submitted", new Date(ticket.createdAt).toLocaleString()],
               ].map(([label, value]) => (
                 <div key={label}>
