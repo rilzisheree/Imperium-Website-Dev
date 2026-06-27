@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "zIXE-K5Xy6xpKWUEFbkzX"
+uri = "file://imperiumNotifier.tar.gz"
+type = "unspecified"
+title = "imperiumNotifier.js (tar.gz)"
