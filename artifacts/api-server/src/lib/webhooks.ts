@@ -183,30 +183,35 @@ function buildDiscordEmbed(event: WebhookEventType, data: Record<string, unknown
   }
 }
 
-async function deliverWithRetry(url: string, body: string, headers: Record<string, string>): Promise<Response> {
-  let response = await fetch(url, {
-    method: "POST",
-    headers,
-    body,
-    signal: AbortSignal.timeout(10000),
-  });
+export async function deliverWithRetry(url: string, body: string, headers: Record<string, string>, maxAttempts = 3): Promise<Response> {
+  let response!: Response;
 
-  if (response.status === 429) {
-    let waitMs = 2000;
-    try {
-      const json = await response.clone().json();
-      if (json.retry_after) waitMs = Math.min(json.retry_after * 1000, 8000);
-    } catch {
-      const retryAfter = response.headers.get("Retry-After");
-      if (retryAfter) waitMs = Math.min(parseFloat(retryAfter) * 1000, 8000);
-    }
-    await new Promise((r) => setTimeout(r, waitMs));
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     response = await fetch(url, {
       method: "POST",
       headers,
       body,
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(15000),
     });
+
+    if (response.status !== 429) break;
+
+    if (attempt === maxAttempts) break;
+
+    let waitMs = 2000;
+    try {
+      const json = await response.clone().json();
+      if (typeof json.retry_after === "number") {
+        waitMs = Math.ceil(json.retry_after * 1000) + 200;
+      }
+    } catch {
+      const retryAfter = response.headers.get("Retry-After");
+      if (retryAfter) waitMs = Math.ceil(parseFloat(retryAfter) * 1000) + 200;
+    }
+
+    waitMs = Math.max(waitMs, 1000);
+    logger.warn({ url, attempt, waitMs }, "Discord rate limited — waiting before retry");
+    await new Promise((r) => setTimeout(r, waitMs));
   }
 
   return response;

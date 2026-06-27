@@ -5,7 +5,7 @@ import { db } from "@workspace/db";
 import { webhooksTable } from "@workspace/db";
 import { requireStaff, requireOwner } from "../middlewares/auth";
 import { logger } from "../lib/logger";
-import { ALL_WEBHOOK_EVENTS } from "../lib/webhooks";
+import { ALL_WEBHOOK_EVENTS, deliverWithRetry } from "../lib/webhooks";
 
 const router = Router();
 router.use(requireStaff);
@@ -164,25 +164,7 @@ router.post("/:id/test", requireOwner, async (req, res) => {
       headers["X-Webhook-Signature"] = `sha256=${sig}`;
     }
 
-    async function sendRequest() {
-      return fetch(webhook.url, { method: "POST", headers, body, signal: AbortSignal.timeout(10000) });
-    }
-
-    let response = await sendRequest();
-
-    if (response.status === 429) {
-      let waitMs = 1500;
-      try {
-        const clone = response.clone();
-        const json = await clone.json();
-        if (json.retry_after) waitMs = Math.min(json.retry_after * 1000, 6000);
-      } catch {
-        const retryAfter = response.headers.get("Retry-After");
-        if (retryAfter) waitMs = Math.min(parseFloat(retryAfter) * 1000, 6000);
-      }
-      await new Promise((r) => setTimeout(r, waitMs));
-      response = await sendRequest();
-    }
+    const response = await deliverWithRetry(webhook.url, body, headers, 5);
 
     const responseText = await response.text().catch(() => "");
     res.json({ success: response.ok, status: response.status, detail: response.ok ? undefined : responseText });
