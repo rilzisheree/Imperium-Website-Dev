@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { Router } from "express";
 import { eq } from "drizzle-orm";
 import { db } from "@workspace/db";
@@ -132,27 +133,46 @@ router.post("/:id/test", requireOwner, async (req, res) => {
     const [webhook] = await db.select().from(webhooksTable).where(eq(webhooksTable.id, id)).limit(1);
     if (!webhook) { res.status(404).json({ error: "Webhook not found" }); return; }
 
-    const { default: crypto } = await import("crypto");
-    const payload = JSON.stringify({
+    const isDiscord = /discord(?:app)?\.com\/api\/webhooks\//i.test(webhook.url);
+
+    const rawData = {
       event: "test",
       timestamp: new Date().toISOString(),
       data: { message: "This is a test webhook from Imperium.", webhookId: webhook.id, webhookName: webhook.name },
-    });
+    };
+
+    const body = isDiscord
+      ? JSON.stringify({
+          username: "Imperium",
+          embeds: [{
+            title: "🔔 Webhook Test",
+            description: `Webhook **${webhook.name}** is connected and working.`,
+            color: 0xFFD23F,
+            fields: [
+              { name: "Webhook ID", value: String(webhook.id), inline: true },
+              { name: "Event", value: "test", inline: true },
+            ],
+            footer: { text: "Imperium Support System" },
+            timestamp: rawData.timestamp,
+          }],
+        })
+      : JSON.stringify(rawData);
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (webhook.secret) {
-      const sig = crypto.createHmac("sha256", webhook.secret).update(payload).digest("hex");
+    if (webhook.secret && !isDiscord) {
+      const sig = crypto.createHmac("sha256", webhook.secret).update(body).digest("hex");
       headers["X-Webhook-Signature"] = `sha256=${sig}`;
     }
 
     const response = await fetch(webhook.url, {
       method: "POST",
       headers,
-      body: payload,
+      body,
       signal: AbortSignal.timeout(8000),
     });
 
-    res.json({ success: response.ok, status: response.status });
+    const responseText = await response.text().catch(() => "");
+    res.json({ success: response.ok, status: response.status, detail: response.ok ? undefined : responseText });
   } catch (err: any) {
     logger.warn({ err }, "Test webhook failed");
     res.status(200).json({ success: false, error: err?.message ?? "Delivery failed" });
