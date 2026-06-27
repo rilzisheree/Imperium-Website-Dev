@@ -194,6 +194,12 @@ export function buildDiscordEmbed(event: WebhookEventType | "test", data: Record
   }
 }
 
+function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+
 export type TestDeliveryResult = {
   ok: boolean;
   status: number;
@@ -203,12 +209,12 @@ export type TestDeliveryResult = {
 };
 
 export async function testDeliver(url: string, body: string, headers: Record<string, string>): Promise<TestDeliveryResult> {
-  const response = await fetch(url, {
-    method: "POST",
-    headers,
-    body,
-    signal: AbortSignal.timeout(10000),
-  });
+  let response: Response;
+  try {
+    response = await fetchWithTimeout(url, { method: "POST", headers, body }, 10000);
+  } catch (err: any) {
+    throw new Error(err?.message ?? "Request timed out or network error");
+  }
 
   const responseBody = await response.text().catch(() => "");
 
@@ -227,76 +233,96 @@ export async function testDeliver(url: string, body: string, headers: Record<str
   return { ok: response.ok, status: response.status, rateLimited: false, retryAfterMs: 0, body: responseBody };
 }
 
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function deliverWithRetry(url: string, body: string, headers: Record<string, string>): Promise<void> {
   const MAX_ATTEMPTS = 3;
+
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     let response: Response;
+
     try {
-      response = await fetch(url, {
-        method: "POST",
-        headers,
-        body,
-        signal: AbortSignal.timeout(10000),
-      });
+      response = await fetchWithTimeout(url, { method: "POST", headers, body }, 10000);
     } catch (err) {
-      logger.warn({ err, url, attempt }, "Webhook fetch error");
-      return;
-    }
-
-    if (response.status !== 429) {
-      if (!response.ok) {
-        const detail = await response.text().catch(() => "");
-        logger.warn({ url, status: response.status, detail }, "Webhook non-2xx response");
+      logger.warn({ err, url, attempt }, "Webhook fetch error — retrying if attempts remain");
+      if (attempt < MAX_ATTEMPTS) {
+        await sleep(1000 * attempt);
+        continue;
       }
+      logger.warn({ url }, "Webhook delivery failed after all attempts (network error)");
       return;
     }
 
-    if (attempt === MAX_ATTEMPTS) {
-      logger.warn({ url, attempt }, "Webhook still rate limited after max attempts — giving up");
-      return;
+    if (response.status === 429) {
+      if (attempt === MAX_ATTEMPTS) {
+        logger.warn({ url, attempt }, "Webhook still rate limited after max attempts — giving up");
+        return;
+      }
+
+      let waitMs = 3000;
+      try {
+        const responseText = await response.text();
+        const json = JSON.parse(responseText);
+        if (typeof json.retry_after === "number") waitMs = Math.ceil(json.retry_after * 1000) + 250;
+      } catch {
+        const header = response.headers.get("Retry-After");
+        if (header) waitMs = Math.ceil(parseFloat(header) * 1000) + 250;
+      }
+      waitMs = Math.min(Math.max(waitMs, 1000), 15000);
+      logger.warn({ url, attempt, waitMs }, "Webhook rate limited — retrying after delay");
+      await sleep(waitMs);
+      continue;
     }
 
-    let waitMs = 3000;
-    try {
-      const json = await response.clone().json();
-      if (typeof json.retry_after === "number") waitMs = Math.ceil(json.retry_after * 1000) + 250;
-    } catch {
-      const header = response.headers.get("Retry-After");
-      if (header) waitMs = Math.ceil(parseFloat(header) * 1000) + 250;
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      logger.warn({ url, status: response.status, detail, attempt }, "Webhook non-2xx response");
     }
-    waitMs = Math.max(waitMs, 1000);
-    logger.warn({ url, attempt, waitMs }, "Webhook rate limited — retrying after delay");
-    await new Promise((r) => setTimeout(r, waitMs));
+
+    return;
   }
 }
 
 export async function fireWebhooks(event: WebhookEventType, data: Record<string, unknown>): Promise<void> {
   try {
     const allActive = await db.select().from(webhooksTable).where(eq(webhooksTable.active, true));
-    const matching = allActive.filter((w) => w.events?.includes(event));
-    if (matching.length === 0) return;
+    const matching = allActive.filter((w) => Array.isArray(w.events) && w.events.includes(event));
+
+    if (matching.length === 0) {
+      logger.debug({ event }, "No active webhooks matched event");
+      return;
+    }
+
+    logger.info({ event, count: matching.length }, "Firing webhooks");
 
     await Promise.allSettled(
       matching.map(async (webhook) => {
         try {
           const discord = isDiscordUrl(webhook.url);
-          const body = discord
-            ? JSON.stringify(buildDiscordEmbed(event, data))
-            : JSON.stringify({ event, timestamp: new Date().toISOString(), data });
 
+          const payload = discord
+            ? buildDiscordEmbed(event, data)
+            : { event, timestamp: new Date().toISOString(), data };
+
+          const body = JSON.stringify(payload);
           const headers: Record<string, string> = { "Content-Type": "application/json" };
+
           if (webhook.secret && !discord) {
             const sig = crypto.createHmac("sha256", webhook.secret).update(body).digest("hex");
             headers["X-Webhook-Signature"] = `sha256=${sig}`;
           }
 
+          logger.debug({ webhookId: webhook.id, url: webhook.url, event, discord }, "Delivering webhook");
           await deliverWithRetry(webhook.url, body, headers);
+          logger.info({ webhookId: webhook.id, event }, "Webhook delivered");
         } catch (err) {
-          logger.warn({ err, webhookId: webhook.id }, "Webhook delivery failed");
+          logger.warn({ err, webhookId: webhook.id, event }, "Webhook delivery failed unexpectedly");
         }
       })
     );
   } catch (err) {
-    logger.error({ err }, "Failed to fire webhooks");
+    logger.error({ err, event }, "Failed to fire webhooks");
   }
 }
