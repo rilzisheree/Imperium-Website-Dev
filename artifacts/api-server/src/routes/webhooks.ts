@@ -5,7 +5,7 @@ import { db } from "@workspace/db";
 import { webhooksTable } from "@workspace/db";
 import { requireStaff, requireOwner } from "../middlewares/auth";
 import { logger } from "../lib/logger";
-import { ALL_WEBHOOK_EVENTS, deliverWithRetry } from "../lib/webhooks";
+import { ALL_WEBHOOK_EVENTS, isDiscordUrl, buildDiscordEmbed, testDeliver } from "../lib/webhooks";
 
 const router = Router();
 router.use(requireStaff);
@@ -124,7 +124,7 @@ router.delete("/:id", requireOwner, async (req, res) => {
   }
 });
 
-// POST /api/staff/webhooks/:id/test — sends a test payload
+// POST /api/staff/webhooks/:id/test — sends a test payload and returns immediately
 router.post("/:id/test", requireOwner, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
@@ -133,44 +133,30 @@ router.post("/:id/test", requireOwner, async (req, res) => {
     const [webhook] = await db.select().from(webhooksTable).where(eq(webhooksTable.id, id)).limit(1);
     if (!webhook) { res.status(404).json({ error: "Webhook not found" }); return; }
 
-    const isDiscord = /discord(?:app)?\.com\/api\/webhooks\//i.test(webhook.url);
+    const discord = isDiscordUrl(webhook.url);
+    const testData = { webhookId: webhook.id, webhookName: webhook.name };
 
-    const rawData = {
-      event: "test",
-      timestamp: new Date().toISOString(),
-      data: { message: "This is a test webhook from Imperium.", webhookId: webhook.id, webhookName: webhook.name },
-    };
-
-    const body = isDiscord
-      ? JSON.stringify({
-          username: "Imperium",
-          embeds: [{
-            title: "🔔 Webhook Test",
-            description: `Webhook **${webhook.name}** is connected and working.`,
-            color: 0xFFD23F,
-            fields: [
-              { name: "Webhook ID", value: String(webhook.id), inline: true },
-              { name: "Event", value: "test", inline: true },
-            ],
-            footer: { text: "Imperium Support System" },
-            timestamp: rawData.timestamp,
-          }],
-        })
-      : JSON.stringify(rawData);
+    const body = discord
+      ? JSON.stringify(buildDiscordEmbed("test", testData))
+      : JSON.stringify({ event: "test", timestamp: new Date().toISOString(), data: testData });
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (webhook.secret && !isDiscord) {
+    if (webhook.secret && !discord) {
       const sig = crypto.createHmac("sha256", webhook.secret).update(body).digest("hex");
       headers["X-Webhook-Signature"] = `sha256=${sig}`;
     }
 
-    const response = await deliverWithRetry(webhook.url, body, headers, 5);
-
-    const responseText = await response.text().catch(() => "");
-    res.json({ success: response.ok, status: response.status, detail: response.ok ? undefined : responseText });
+    const result = await testDeliver(webhook.url, body, headers);
+    res.json({
+      success: result.ok,
+      status: result.status,
+      rateLimited: result.rateLimited,
+      retryAfterMs: result.retryAfterMs,
+      detail: result.ok ? undefined : result.body,
+    });
   } catch (err: any) {
     logger.warn({ err }, "Test webhook failed");
-    res.status(200).json({ success: false, error: err?.message ?? "Delivery failed" });
+    res.status(200).json({ success: false, status: 0, rateLimited: false, retryAfterMs: 0, error: err?.message ?? "Request timed out or failed" });
   }
 });
 

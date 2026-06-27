@@ -21,7 +21,7 @@ export const ALL_WEBHOOK_EVENTS: WebhookEventType[] = [
   "ticket.deleted",
 ];
 
-function isDiscordUrl(url: string): boolean {
+export function isDiscordUrl(url: string): boolean {
   return /discord(?:app)?\.com\/api\/webhooks\//i.test(url);
 }
 
@@ -55,9 +55,26 @@ const EVENT_COLORS: Record<WebhookEventType | "test", number> = {
   test: 0xFFD23F,
 };
 
-function buildDiscordEmbed(event: WebhookEventType, data: Record<string, unknown>): object {
+export function buildDiscordEmbed(event: WebhookEventType | "test", data: Record<string, unknown>): object {
   const color = EVENT_COLORS[event] ?? 0x5865F2;
   const timestamp = new Date().toISOString();
+
+  if (event === "test") {
+    return {
+      username: "Imperium",
+      embeds: [{
+        title: "🔔 Webhook Test",
+        description: `Webhook **${String(data.webhookName ?? "Unknown")}** is connected and working correctly.`,
+        color,
+        fields: [
+          { name: "Webhook ID", value: String(data.webhookId ?? "N/A"), inline: true },
+          { name: "Event", value: "test", inline: true },
+        ],
+        footer: { text: "Imperium Support System" },
+        timestamp,
+      }],
+    };
+  }
 
   switch (event) {
     case "ticket.created": {
@@ -79,7 +96,6 @@ function buildDiscordEmbed(event: WebhookEventType, data: Record<string, unknown
         }],
       };
     }
-
     case "ticket.status_changed": {
       return {
         username: "Imperium",
@@ -97,26 +113,24 @@ function buildDiscordEmbed(event: WebhookEventType, data: Record<string, unknown
         }],
       };
     }
-
     case "ticket.reply_added": {
       const message = String(data.message ?? "");
       return {
         username: "Imperium",
         embeds: [{
-          title: "💬 Reply Added to Ticket",
+          title: "💬 Reply Added",
           color,
           fields: [
             { name: "Ticket Code", value: String(data.ticketCode ?? "N/A"), inline: true },
             { name: "Author", value: String(data.authorName ?? "N/A"), inline: true },
             { name: "Role", value: String(data.authorRole ?? "N/A"), inline: true },
-            { name: "Message", value: message.length > 1024 ? message.slice(0, 1021) + "..." : message || "N/A", inline: false },
+            { name: "Message", value: message.slice(0, 1024) || "N/A", inline: false },
           ],
           footer: { text: "Imperium Support System" },
           timestamp,
         }],
       };
     }
-
     case "ticket.note_added": {
       const note = String(data.note ?? "");
       return {
@@ -127,14 +141,13 @@ function buildDiscordEmbed(event: WebhookEventType, data: Record<string, unknown
           fields: [
             { name: "Ticket Code", value: String(data.ticketCode ?? "N/A"), inline: true },
             { name: "Added By", value: String(data.addedBy ?? "N/A"), inline: true },
-            { name: "Note", value: note.length > 1024 ? note.slice(0, 1021) + "..." : note || "N/A", inline: false },
+            { name: "Note", value: note.slice(0, 1024) || "N/A", inline: false },
           ],
           footer: { text: "Imperium Support System" },
           timestamp,
         }],
       };
     }
-
     case "ticket.assigned": {
       return {
         username: "Imperium",
@@ -151,7 +164,6 @@ function buildDiscordEmbed(event: WebhookEventType, data: Record<string, unknown
         }],
       };
     }
-
     case "ticket.deleted": {
       return {
         username: "Imperium",
@@ -167,7 +179,6 @@ function buildDiscordEmbed(event: WebhookEventType, data: Record<string, unknown
         }],
       };
     }
-
     default: {
       return {
         username: "Imperium",
@@ -183,38 +194,80 @@ function buildDiscordEmbed(event: WebhookEventType, data: Record<string, unknown
   }
 }
 
-export async function deliverWithRetry(url: string, body: string, headers: Record<string, string>, maxAttempts = 3): Promise<Response> {
-  let response!: Response;
+export type TestDeliveryResult = {
+  ok: boolean;
+  status: number;
+  rateLimited: boolean;
+  retryAfterMs: number;
+  body: string;
+};
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    response = await fetch(url, {
-      method: "POST",
-      headers,
-      body,
-      signal: AbortSignal.timeout(15000),
-    });
+export async function testDeliver(url: string, body: string, headers: Record<string, string>): Promise<TestDeliveryResult> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body,
+    signal: AbortSignal.timeout(10000),
+  });
 
-    if (response.status !== 429) break;
+  const responseBody = await response.text().catch(() => "");
 
-    if (attempt === maxAttempts) break;
-
-    let waitMs = 2000;
+  if (response.status === 429) {
+    let retryAfterMs = 5000;
     try {
-      const json = await response.clone().json();
-      if (typeof json.retry_after === "number") {
-        waitMs = Math.ceil(json.retry_after * 1000) + 200;
-      }
+      const json = JSON.parse(responseBody);
+      if (typeof json.retry_after === "number") retryAfterMs = Math.ceil(json.retry_after * 1000);
     } catch {
-      const retryAfter = response.headers.get("Retry-After");
-      if (retryAfter) waitMs = Math.ceil(parseFloat(retryAfter) * 1000) + 200;
+      const header = response.headers.get("Retry-After");
+      if (header) retryAfterMs = Math.ceil(parseFloat(header) * 1000);
     }
-
-    waitMs = Math.max(waitMs, 1000);
-    logger.warn({ url, attempt, waitMs }, "Discord rate limited — waiting before retry");
-    await new Promise((r) => setTimeout(r, waitMs));
+    return { ok: false, status: 429, rateLimited: true, retryAfterMs, body: responseBody };
   }
 
-  return response;
+  return { ok: response.ok, status: response.status, rateLimited: false, retryAfterMs: 0, body: responseBody };
+}
+
+async function deliverWithRetry(url: string, body: string, headers: Record<string, string>): Promise<void> {
+  const MAX_ATTEMPTS = 3;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        headers,
+        body,
+        signal: AbortSignal.timeout(10000),
+      });
+    } catch (err) {
+      logger.warn({ err, url, attempt }, "Webhook fetch error");
+      return;
+    }
+
+    if (response.status !== 429) {
+      if (!response.ok) {
+        const detail = await response.text().catch(() => "");
+        logger.warn({ url, status: response.status, detail }, "Webhook non-2xx response");
+      }
+      return;
+    }
+
+    if (attempt === MAX_ATTEMPTS) {
+      logger.warn({ url, attempt }, "Webhook still rate limited after max attempts — giving up");
+      return;
+    }
+
+    let waitMs = 3000;
+    try {
+      const json = await response.clone().json();
+      if (typeof json.retry_after === "number") waitMs = Math.ceil(json.retry_after * 1000) + 250;
+    } catch {
+      const header = response.headers.get("Retry-After");
+      if (header) waitMs = Math.ceil(parseFloat(header) * 1000) + 250;
+    }
+    waitMs = Math.max(waitMs, 1000);
+    logger.warn({ url, attempt, waitMs }, "Webhook rate limited — retrying after delay");
+    await new Promise((r) => setTimeout(r, waitMs));
+  }
 }
 
 export async function fireWebhooks(event: WebhookEventType, data: Record<string, unknown>): Promise<void> {
@@ -237,13 +290,9 @@ export async function fireWebhooks(event: WebhookEventType, data: Record<string,
             headers["X-Webhook-Signature"] = `sha256=${sig}`;
           }
 
-          const res = await deliverWithRetry(webhook.url, body, headers);
-          if (!res.ok) {
-            const detail = await res.text().catch(() => "");
-            logger.warn({ webhookId: webhook.id, status: res.status, detail }, "Webhook returned non-2xx");
-          }
+          await deliverWithRetry(webhook.url, body, headers);
         } catch (err) {
-          logger.warn({ err, webhookId: webhook.id, url: webhook.url }, "Webhook delivery failed");
+          logger.warn({ err, webhookId: webhook.id }, "Webhook delivery failed");
         }
       })
     );

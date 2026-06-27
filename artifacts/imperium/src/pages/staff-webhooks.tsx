@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetStaffMe, useStaffLogout } from "@workspace/api-client-react";
 import { StaffGuard } from "@/components/staff-guard";
@@ -8,13 +8,31 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation } from "@tanstack/react-query";
 
 const ALL_EVENTS = [
-  { id: "ticket.created", label: "Ticket Created" },
-  { id: "ticket.status_changed", label: "Status Changed" },
-  { id: "ticket.reply_added", label: "Reply Added" },
-  { id: "ticket.note_added", label: "Note Added" },
-  { id: "ticket.assigned", label: "Ticket Assigned" },
-  { id: "ticket.deleted", label: "Ticket Deleted" },
-];
+  { id: "ticket.created", label: "Ticket Created", color: "indigo" },
+  { id: "ticket.status_changed", label: "Status Changed", color: "orange" },
+  { id: "ticket.reply_added", label: "Reply Added", color: "green" },
+  { id: "ticket.note_added", label: "Note Added", color: "yellow" },
+  { id: "ticket.assigned", label: "Ticket Assigned", color: "pink" },
+  { id: "ticket.deleted", label: "Ticket Deleted", color: "red" },
+] as const;
+
+const EVENT_STYLES: Record<string, string> = {
+  "ticket.created": "bg-indigo-500/10 text-indigo-300 border-indigo-500/25",
+  "ticket.status_changed": "bg-orange-500/10 text-orange-300 border-orange-500/25",
+  "ticket.reply_added": "bg-green-500/10 text-green-300 border-green-500/25",
+  "ticket.note_added": "bg-yellow-500/10 text-yellow-300 border-yellow-500/25",
+  "ticket.assigned": "bg-pink-500/10 text-pink-300 border-pink-500/25",
+  "ticket.deleted": "bg-red-500/10 text-red-300 border-red-500/25",
+};
+
+const EVENT_LABELS: Record<string, string> = {
+  "ticket.created": "Ticket Created",
+  "ticket.status_changed": "Status Changed",
+  "ticket.reply_added": "Reply Added",
+  "ticket.note_added": "Note Added",
+  "ticket.assigned": "Ticket Assigned",
+  "ticket.deleted": "Ticket Deleted",
+};
 
 interface Webhook {
   id: number;
@@ -24,6 +42,15 @@ interface Webhook {
   secret: string | null;
   active: boolean;
   createdAt: string;
+}
+
+interface TestResult {
+  success: boolean;
+  status: number;
+  rateLimited: boolean;
+  retryAfterMs: number;
+  error?: string;
+  detail?: string;
 }
 
 function StaffHeader() {
@@ -77,12 +104,37 @@ function useWebhooks() {
   });
 }
 
+function RateLimitCountdown({ retryAfterMs, onDone }: { retryAfterMs: number; onDone: () => void }) {
+  const [remaining, setRemaining] = useState(Math.ceil(retryAfterMs / 1000));
+
+  useEffect(() => {
+    if (remaining <= 0) { onDone(); return; }
+    const t = setInterval(() => setRemaining((s) => {
+      if (s <= 1) { clearInterval(t); onDone(); return 0; }
+      return s - 1;
+    }), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs">
+      <svg className="w-4 h-4 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+      </svg>
+      <span>Discord rate limited — retrying in <strong>{remaining}s</strong></span>
+    </motion.div>
+  );
+}
+
 function CreateWebhookForm({ onCreated }: { onCreated: () => void }) {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [secret, setSecret] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [open, setOpen] = useState(true);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -100,6 +152,7 @@ function CreateWebhookForm({ onCreated }: { onCreated: () => void }) {
     },
     onSuccess: () => {
       setName(""); setUrl(""); setSecret(""); setSelectedEvents([]);
+      setError("");
       onCreated();
     },
     onError: (err: Error) => setError(err.message),
@@ -109,47 +162,112 @@ function CreateWebhookForm({ onCreated }: { onCreated: () => void }) {
     setSelectedEvents((prev) => prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]);
 
   return (
-    <div className="bg-white/3 border border-white/10 rounded-xl p-6 space-y-5">
-      <h3 className="text-white font-bold text-base">Create Webhook</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-white/50 text-xs uppercase tracking-wider">Name</label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Discord Notifications"
-            className="bg-white/5 border-white/10 text-white placeholder:text-white/25" />
+    <div className="rounded-xl border border-white/8 overflow-hidden">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-6 py-4 bg-white/3 hover:bg-white/5 transition-colors text-left"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center">
+            <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          <span className="text-white font-semibold text-sm">New Webhook</span>
         </div>
-        <div className="space-y-1.5">
-          <label className="text-white/50 text-xs uppercase tracking-wider">URL</label>
-          <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://discord.com/api/webhooks/..."
-            className="bg-white/5 border-white/10 text-white placeholder:text-white/25" />
-        </div>
-      </div>
-      <div className="space-y-1.5">
-        <label className="text-white/50 text-xs uppercase tracking-wider">Signing Secret <span className="text-white/25">(optional)</span></label>
-        <Input value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="Used for HMAC-SHA256 signature verification"
-          className="bg-white/5 border-white/10 text-white placeholder:text-white/25" type="password" />
-      </div>
-      <div className="space-y-2">
-        <label className="text-white/50 text-xs uppercase tracking-wider">Events to Subscribe</label>
-        <div className="flex flex-wrap gap-2">
-          {ALL_EVENTS.map((ev) => (
-            <button key={ev.id} type="button" onClick={() => toggleEvent(ev.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${selectedEvents.includes(ev.id) ? "bg-primary/15 border-primary/50 text-primary" : "border-white/10 text-white/40 hover:text-white hover:border-white/25"}`}>
-              {ev.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      {error && <p className="text-red-400 text-xs">{error}</p>}
-      <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !name.trim() || !url.trim() || selectedEvents.length === 0}
-        className="bg-primary text-primary-foreground hover:bg-primary/90">
-        {mutation.isPending ? "Creating..." : "Create Webhook"}
-      </Button>
+        <svg className={`w-4 h-4 text-white/30 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-6 pb-6 pt-5 space-y-5 border-t border-white/5 bg-white/[0.01]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-white/40 text-xs uppercase tracking-widest">Name</label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Discord Notifications"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-primary/40" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-white/40 text-xs uppercase tracking-widest">Webhook URL</label>
+                  <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://discord.com/api/webhooks/..."
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-primary/40" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-white/40 text-xs uppercase tracking-widest">
+                  Signing Secret <span className="text-white/20 normal-case tracking-normal">(optional — not needed for Discord)</span>
+                </label>
+                <Input value={secret} onChange={(e) => setSecret(e.target.value)}
+                  placeholder="HMAC-SHA256 key for signature verification"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-primary/40" type="password" />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-white/40 text-xs uppercase tracking-widest">Events</label>
+                <div className="flex flex-wrap gap-2">
+                  {ALL_EVENTS.map((ev) => {
+                    const active = selectedEvents.includes(ev.id);
+                    return (
+                      <button key={ev.id} type="button" onClick={() => toggleEvent(ev.id)}
+                        className={`px-3 py-1.5 rounded-lg text-xs border font-medium transition-all ${
+                          active ? EVENT_STYLES[ev.id] : "border-white/8 text-white/35 hover:text-white/70 hover:border-white/20"
+                        }`}>
+                        {ev.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedEvents.length === 0 && (
+                  <p className="text-white/25 text-xs">Select at least one event to subscribe to.</p>
+                )}
+              </div>
+
+              {error && (
+                <p className="text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>
+              )}
+
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-white/25 text-xs">
+                  {selectedEvents.length > 0 ? `${selectedEvents.length} event${selectedEvents.length > 1 ? "s" : ""} selected` : "No events selected"}
+                </p>
+                <Button onClick={() => mutation.mutate()}
+                  disabled={mutation.isPending || !name.trim() || !url.trim() || selectedEvents.length === 0}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs px-5">
+                  {mutation.isPending ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                      </svg>
+                      Creating...
+                    </span>
+                  ) : "Create Webhook"}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 function WebhookCard({ webhook, onRefresh }: { webhook: Webhook; onRefresh: () => void }) {
-  const [testResult, setTestResult] = useState<{ success: boolean; status?: number; error?: string } | null>(null);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
+  const [rateLimitCountdown, setRateLimitCountdown] = useState(0);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const isDiscord = /discord(?:app)?\.com\/api\/webhooks\//i.test(webhook.url);
 
   const toggleMutation = useMutation({
     mutationFn: async () => {
@@ -178,63 +296,175 @@ function WebhookCard({ webhook, onRefresh }: { webhook: Webhook; onRefresh: () =
   });
 
   const testMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`${BASE}/api/staff/webhooks/${webhook.id}/test`, {
-        method: "POST",
-        credentials: "include",
-      });
-      return res.json();
+    mutationFn: async (): Promise<TestResult> => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 14000);
+      try {
+        const res = await fetch(`${BASE}/api/staff/webhooks/${webhook.id}/test`, {
+          method: "POST",
+          credentials: "include",
+          signal: controller.signal,
+        });
+        return await res.json();
+      } finally {
+        clearTimeout(timeout);
+      }
     },
-    onSuccess: (data) => setTestResult(data),
+    onSuccess: (data) => {
+      setTestResult(data);
+      if (data.rateLimited && data.retryAfterMs > 0) {
+        setRateLimitCountdown(data.retryAfterMs);
+      }
+    },
+    onError: (err: Error) => {
+      setTestResult({ success: false, status: 0, rateLimited: false, retryAfterMs: 0, error: err.name === "AbortError" ? "Request timed out" : err.message });
+    },
   });
 
+  const truncateUrl = (url: string) => {
+    if (url.length <= 52) return url;
+    return url.slice(0, 30) + "…" + url.slice(-18);
+  };
+
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-      className={`bg-white/3 border rounded-xl p-5 space-y-4 ${webhook.active ? "border-white/10" : "border-white/5 opacity-60"}`}>
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-white font-semibold">{webhook.name}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full border ${webhook.active ? "bg-green-500/15 text-green-400 border-green-500/30" : "bg-gray-500/15 text-gray-400 border-gray-500/30"}`}>
-              {webhook.active ? "Active" : "Inactive"}
-            </span>
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      className={`rounded-xl border transition-all ${webhook.active ? "border-white/8 bg-white/[0.02]" : "border-white/4 bg-white/[0.01] opacity-55"}`}>
+
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2.5 mb-2 flex-wrap">
+              <span className="text-white font-semibold text-sm">{webhook.name}</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                webhook.active
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
+                  : "bg-white/5 text-white/30 border-white/10"
+              }`}>
+                {webhook.active ? "Active" : "Inactive"}
+              </span>
+              {isDiscord && (
+                <span className="text-xs px-2 py-0.5 rounded-full border bg-indigo-500/10 text-indigo-400 border-indigo-500/25 font-medium">
+                  Discord
+                </span>
+              )}
+              {webhook.secret && (
+                <span className="text-xs px-2 py-0.5 rounded-full border bg-white/5 text-white/30 border-white/10 font-medium">
+                  🔒 Signed
+                </span>
+              )}
+            </div>
+            <p className="text-white/30 text-xs font-mono" title={webhook.url}>{truncateUrl(webhook.url)}</p>
           </div>
-          <p className="text-white/40 text-xs font-mono break-all">{webhook.url}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => testMutation.mutate()} disabled={testMutation.isPending}
-            className="border-white/10 text-white/50 hover:text-white text-xs">
-            {testMutation.isPending ? "Sending..." : "Test"}
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => toggleMutation.mutate()} disabled={toggleMutation.isPending}
-            className={`text-xs border-white/10 ${webhook.active ? "text-yellow-400 hover:bg-yellow-500/10" : "text-green-400 hover:bg-green-500/10"}`}>
-            {webhook.active ? "Disable" : "Enable"}
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => { if (confirm("Delete this webhook?")) deleteMutation.mutate(); }}
-            disabled={deleteMutation.isPending}
-            className="border-red-500/20 text-red-400 hover:bg-red-500/10 text-xs">
-            Delete
-          </Button>
-        </div>
-      </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        {webhook.events.map((ev) => (
-          <span key={ev} className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary/70 border border-primary/20">
-            {ev}
-          </span>
-        ))}
-      </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Button size="sm" variant="outline"
+              onClick={() => { setTestResult(null); testMutation.mutate(); }}
+              disabled={testMutation.isPending || rateLimitCountdown > 0}
+              className="border-white/10 text-white/50 hover:text-white hover:border-white/25 text-xs h-7 px-3 gap-1.5">
+              {testMutation.isPending ? (
+                <>
+                  <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  Sending…
+                </>
+              ) : rateLimitCountdown > 0 ? (
+                `Wait ${Math.ceil(rateLimitCountdown / 1000)}s`
+              ) : (
+                <>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  Test
+                </>
+              )}
+            </Button>
 
-      {webhook.secret && (
-        <p className="text-white/25 text-xs">🔒 Signed with secret</p>
-      )}
+            <Button size="sm" variant="outline"
+              onClick={() => toggleMutation.mutate()}
+              disabled={toggleMutation.isPending}
+              className={`text-xs h-7 px-3 border-white/10 transition-colors ${
+                webhook.active
+                  ? "text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/25"
+                  : "text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/25"
+              }`}>
+              {webhook.active ? "Disable" : "Enable"}
+            </Button>
+
+            {!confirmDelete ? (
+              <Button size="sm" variant="outline"
+                onClick={() => setConfirmDelete(true)}
+                className="border-white/10 text-red-400/60 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/25 text-xs h-7 px-3">
+                Delete
+              </Button>
+            ) : (
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="outline"
+                  onClick={() => deleteMutation.mutate()}
+                  disabled={deleteMutation.isPending}
+                  className="border-red-500/40 text-red-400 hover:bg-red-500/15 text-xs h-7 px-2.5">
+                  {deleteMutation.isPending ? "…" : "Confirm"}
+                </Button>
+                <Button size="sm" variant="outline"
+                  onClick={() => setConfirmDelete(false)}
+                  className="border-white/10 text-white/40 text-xs h-7 px-2.5">
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {webhook.events.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {webhook.events.map((ev) => (
+              <span key={ev} className={`text-xs px-2 py-0.5 rounded border font-medium ${EVENT_STYLES[ev] ?? "bg-white/5 text-white/40 border-white/10"}`}>
+                {EVENT_LABELS[ev] ?? ev}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       <AnimatePresence>
-        {testResult && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-            className={`text-xs rounded-lg px-3 py-2 border ${testResult.success ? "bg-green-500/10 border-green-500/25 text-green-400" : "bg-red-500/10 border-red-500/25 text-red-400"}`}>
-            {testResult.success ? `✓ Test delivered successfully (HTTP ${testResult.status})` : `✗ Delivery failed: ${testResult.error ?? `HTTP ${testResult.status}`}`}
+        {rateLimitCountdown > 0 && (
+          <div className="px-5 pb-4">
+            <RateLimitCountdown
+              retryAfterMs={rateLimitCountdown}
+              onDone={() => setRateLimitCountdown(0)}
+            />
+          </div>
+        )}
+        {testResult && !testResult.rateLimited && (
+          <motion.div
+            key="result"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-5 pb-4"
+          >
+            <div className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg border text-xs font-medium ${
+              testResult.success
+                ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+                : "bg-red-500/10 border-red-500/25 text-red-400"
+            }`}>
+              {testResult.success ? (
+                <>
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Delivered successfully — HTTP {testResult.status}
+                </>
+              ) : (
+                <>
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  {testResult.error ?? `Delivery failed — HTTP ${testResult.status}`}
+                </>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -251,48 +481,97 @@ function WebhooksContent() {
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-4xl">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="text-3xl font-black text-white mb-1">Webhooks</h1>
-        <p className="text-white/40 text-sm">Send real-time HTTP POST payloads to external URLs when ticket events occur.</p>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-white tracking-tight">Webhooks</h1>
+            <p className="text-white/35 text-xs mt-0.5">Send real-time notifications to Discord or any HTTP endpoint when ticket events occur.</p>
+          </div>
+        </div>
       </motion.div>
 
       {!isOwner && (
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 text-yellow-400 text-sm mb-6">
-          Only owners can create or manage webhooks.
+        <div className="flex items-center gap-3 bg-amber-500/8 border border-amber-500/20 rounded-xl px-5 py-4 text-amber-300 text-sm mb-6">
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          Only owners and developers can manage webhooks.
         </div>
       )}
 
       {isOwner && (
-        <div className="mb-8">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-6">
           <CreateWebhookForm onCreated={refresh} />
-        </div>
+        </motion.div>
       )}
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-white/60 text-xs uppercase tracking-widest">Configured Webhooks</h2>
-          <span className="text-white/30 text-xs">{webhooks?.length ?? 0} total</span>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-white/40 text-xs uppercase tracking-widest font-medium">Configured Webhooks</h2>
+          {!isLoading && (
+            <span className="text-white/20 text-xs">{webhooks?.length ?? 0} total</span>
+          )}
         </div>
-        {isLoading && <p className="text-white/30 text-sm py-4">Loading...</p>}
-        {!isLoading && webhooks?.length === 0 && (
-          <div className="text-center py-12 text-white/25 text-sm border border-white/5 rounded-xl">
-            No webhooks configured yet.
+
+        {isLoading && (
+          <div className="py-10 flex justify-center">
+            <svg className="w-5 h-5 text-white/20 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
           </div>
         )}
-        {webhooks?.map((w) => (
-          <WebhookCard key={w.id} webhook={w} onRefresh={refresh} />
-        ))}
+
+        {!isLoading && webhooks?.length === 0 && (
+          <div className="text-center py-14 border border-dashed border-white/8 rounded-xl">
+            <div className="w-10 h-10 rounded-xl bg-white/4 border border-white/8 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-4 h-4 text-white/25" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <p className="text-white/25 text-sm font-medium">No webhooks configured</p>
+            <p className="text-white/15 text-xs mt-1">Create one above to start receiving notifications.</p>
+          </div>
+        )}
+
+        <AnimatePresence>
+          {webhooks?.map((w) => (
+            <WebhookCard key={w.id} webhook={w} onRefresh={refresh} />
+          ))}
+        </AnimatePresence>
       </div>
 
-      <div className="mt-10 bg-white/2 border border-white/8 rounded-xl p-6 space-y-3">
-        <h3 className="text-white/60 text-xs uppercase tracking-widest mb-3">Payload Format</h3>
-        <pre className="text-xs text-white/50 font-mono leading-relaxed overflow-x-auto">{`{
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+        className="mt-10 rounded-xl border border-white/6 bg-white/[0.015] p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <svg className="w-3.5 h-3.5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 className="text-white/40 text-xs uppercase tracking-widest font-medium">Payload Format</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p className="text-white/25 text-xs mb-2 font-medium">Discord webhooks</p>
+            <p className="text-white/20 text-xs leading-relaxed">Automatically detected and sent as rich embeds with event-specific colors and fields. No configuration needed.</p>
+          </div>
+          <div>
+            <p className="text-white/25 text-xs mb-2 font-medium">Generic webhooks</p>
+            <pre className="text-xs text-white/35 font-mono leading-relaxed overflow-x-auto bg-white/3 rounded-lg p-3">{`{
   "event": "ticket.created",
-  "timestamp": "2025-01-01T00:00:00.000Z",
-  "data": { ... ticket details }
+  "timestamp": "...",
+  "data": { ... }
 }`}</pre>
-        <p className="text-white/30 text-xs">If a signing secret is set, each request includes an <code className="text-primary/60">X-Webhook-Signature</code> header formatted as <code className="text-primary/60">sha256=&lt;hmac&gt;</code>.</p>
-      </div>
+          </div>
+        </div>
+        <p className="text-white/20 text-xs mt-4 pt-4 border-t border-white/5">
+          If a signing secret is set, each request includes an <code className="text-primary/50 bg-primary/10 px-1 rounded">X-Webhook-Signature</code> header (<code className="text-primary/50 bg-primary/10 px-1 rounded">sha256=&lt;hmac&gt;</code>). Discord webhooks are never signed.
+        </p>
+      </motion.div>
     </div>
   );
 }
