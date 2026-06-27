@@ -16,6 +16,7 @@ import StaffTicketDetail from "@/pages/staff-ticket-detail";
 import StaffMembers from "@/pages/staff-members";
 import StaffLogs from "@/pages/staff-logs";
 import StaffCMS from "@/pages/staff-cms";
+import StaffWebhooks from "@/pages/staff-webhooks";
 import { setBaseUrl } from "@workspace/api-client-react";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/staff/members" component={StaffMembers} />
       <Route path="/staff/logs" component={StaffLogs} />
       <Route path="/staff/cms" component={StaffCMS} />
+      <Route path="/staff/webhooks" component={StaffWebhooks} />
       <Route component={NotFound} />
     </Switch>
   );

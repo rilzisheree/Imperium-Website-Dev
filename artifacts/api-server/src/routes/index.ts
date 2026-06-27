@@ -5,6 +5,7 @@ import staffTicketsRouter from "./tickets-staff";
 import staffRouter from "./staff";
 import updatesRouter from "./updates";
 import cmsRouter from "./cms";
+import webhooksRouter from "./webhooks";
 
 const router: IRouter = Router();
 
@@ -18,6 +19,9 @@ router.use("/staff", staffRouter);
 
 // Staff ticket management
 router.use("/staff/tickets", staffTicketsRouter);
+
+// Staff webhook management
+router.use("/staff/webhooks", webhooksRouter);
 
 // Public updates
 router.use("/updates", updatesRouter);

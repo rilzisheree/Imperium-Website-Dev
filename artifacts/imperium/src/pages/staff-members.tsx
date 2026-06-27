@@ -38,6 +38,7 @@ function StaffNav() {
             { href: "/staff/members", label: "Team" },
             { href: "/staff/logs", label: "Logs" },
             { href: "/staff/cms", label: "Site Content" },
+            { href: "/staff/webhooks", label: "Webhooks" },
           ].map((l) => (
             <a key={l.href} href={l.href} className={`transition-colors ${location.pathname === l.href ? "text-primary" : "text-white/50 hover:text-primary"}`}>{l.label}</a>
           ))}

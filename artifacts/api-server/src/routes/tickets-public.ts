@@ -11,6 +11,7 @@ import {
   sendTicketConfirmation,
 } from "../lib/email";
 import { logger } from "../lib/logger";
+import { fireWebhooks } from "../lib/webhooks";
 
 const router = Router();
 
@@ -100,6 +101,16 @@ router.post("/", async (req, res) => {
       subject,
       createdAt: ticket.createdAt,
     }).catch((err) => logger.error({ err }, "Failed to send confirmation email"));
+
+    fireWebhooks("ticket.created", {
+      ticketCode: ticket.ticketCode,
+      type: ticket.type,
+      status: ticket.status,
+      robloxUsername: ticket.robloxUsername,
+      discordUsername: ticket.discordUsername,
+      subject: ticket.subject,
+      createdAt: ticket.createdAt.toISOString(),
+    }).catch(() => {});
 
     res.status(201).json(formatTicket(ticket));
   } catch (err) {

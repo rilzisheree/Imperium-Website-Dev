@@ -15,6 +15,7 @@ import {
   sendTicketClosedNotification,
 } from "../lib/email";
 import { logger } from "../lib/logger";
+import { fireWebhooks } from "../lib/webhooks";
 
 const router = Router();
 router.use(requireStaff);
@@ -154,6 +155,14 @@ router.patch("/:ticketId/status", async (req, res) => {
       sendTicketStatusUpdate({ to: ticket.email, ticketCode: ticket.ticketCode, subject: ticket.subject, newStatus: status, staffName: session?.staffUsername }).catch(() => {});
     }
 
+    fireWebhooks("ticket.status_changed", {
+      ticketCode: ticket.ticketCode,
+      type: ticket.type,
+      oldStatus: ticket.status,
+      newStatus: status,
+      changedBy: session?.staffUsername ?? "Staff",
+    }).catch(() => {});
+
     res.json(formatTicket(updated));
   } catch (err) {
     logger.error({ err }, "Failed to update status"); res.status(500).json({ error: "Internal server error" });
@@ -185,6 +194,13 @@ router.patch("/:ticketId/assign", async (req, res) => {
       description: staffId ? `Assigned to ${assignedName}` : "Unassigned",
       actorName: session?.staffUsername ?? "Staff",
     });
+
+    fireWebhooks("ticket.assigned", {
+      ticketCode: ticket.ticketCode,
+      type: ticket.type,
+      assignedTo: assignedName ?? null,
+      assignedBy: session?.staffUsername ?? "Staff",
+    }).catch(() => {});
 
     res.json(formatTicket(updated, assignedName));
   } catch (err) {
@@ -224,6 +240,14 @@ router.post("/:ticketId/replies", async (req, res) => {
 
     sendStaffReplyNotification({ to: ticket.email, ticketCode: ticket.ticketCode, subject: ticket.subject, staffName: authorName, staffRole: authorRole, message: message.trim() }).catch(() => {});
 
+    fireWebhooks("ticket.reply_added", {
+      ticketCode: ticket.ticketCode,
+      type: ticket.type,
+      authorName,
+      authorRole,
+      message: message.trim(),
+    }).catch(() => {});
+
     res.status(201).json({ id: reply.id, ticketId: reply.ticketId, authorName: reply.authorName, authorRole: reply.authorRole, message: reply.message, createdAt: reply.createdAt.toISOString() });
   } catch (err) {
     logger.error({ err }, "Failed to add reply"); res.status(500).json({ error: "Internal server error" });
@@ -253,6 +277,13 @@ router.delete("/:ticketId/delete", async (req, res) => {
     await db.delete(ticketsTable).where(eq(ticketsTable.id, ticketId));
 
     logger.info({ ticketId, ticketCode: ticket.ticketCode, actor: session.staffUsername }, "Ticket deleted");
+
+    fireWebhooks("ticket.deleted", {
+      ticketCode: ticket.ticketCode,
+      type: ticket.type,
+      deletedBy: session?.staffUsername ?? "Staff",
+    }).catch(() => {});
+
     res.json({ success: true });
   } catch (err) {
     logger.error({ err }, "Failed to delete ticket");
@@ -301,6 +332,13 @@ router.post("/:ticketId/notes", async (req, res) => {
     await db.insert(ticketEventsTable).values({
       ticketId, eventType: "note_added", description: `Internal note added by ${authorName}`, actorName: authorName,
     });
+
+    fireWebhooks("ticket.note_added", {
+      ticketCode: ticket.ticketCode,
+      type: ticket.type,
+      authorName,
+      note: note.trim(),
+    }).catch(() => {});
 
     res.status(201).json({ id: inserted.id, ticketId: inserted.ticketId, authorName: inserted.authorName, note: inserted.note, createdAt: inserted.createdAt.toISOString() });
   } catch (err) {

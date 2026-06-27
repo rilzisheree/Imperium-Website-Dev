@@ -62,6 +62,7 @@ function StaffDashboardContent() {
               { href: "/staff/members", label: "Team" },
               { href: "/staff/logs", label: "Logs" },
               { href: "/staff/cms", label: "Site Content" },
+              { href: "/staff/webhooks", label: "Webhooks" },
             ].map((link) => (
               <a
                 key={link.href}
