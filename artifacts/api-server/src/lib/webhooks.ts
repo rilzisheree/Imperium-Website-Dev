@@ -87,21 +87,21 @@ export function buildDiscordEmbed(
   }
 
   switch (event) {
-    case "ticket.created":
-      return [{
-        title: "🎫 New Ticket Created",
-        color,
-        fields: [
-          { name: "Ticket Code", value: safe(data.ticketCode), inline: true },
-          { name: "Type", value: ticketTypeLabel(safe(data.type)), inline: true },
-          { name: "Status", value: statusLabel(safe(data.status, "pending")), inline: true },
-          { name: "Roblox Username", value: safe(data.robloxUsername), inline: true },
-          { name: "Discord Username", value: safe(data.discordUsername), inline: true },
-          { name: "Subject", value: safe(data.subject).slice(0, 1024), inline: false },
-        ],
-        footer,
-        timestamp,
-      }];
+    case "ticket.created": {
+      const fields: { name: string; value: string; inline: boolean }[] = [
+        { name: "Ticket Code", value: safe(data.ticketCode), inline: true },
+        { name: "Type", value: ticketTypeLabel(safe(data.type)), inline: true },
+        { name: "Status", value: statusLabel(safe(data.status, "pending")), inline: true },
+        { name: "Roblox Username", value: safe(data.robloxUsername), inline: true },
+        { name: "Discord Username", value: safe(data.discordUsername), inline: true },
+      ];
+      if (data.discordUserId) fields.push({ name: "Discord User ID", value: safe(data.discordUserId), inline: true });
+      if (data.email) fields.push({ name: "Email", value: safe(data.email), inline: true });
+      fields.push({ name: "Subject", value: safe(data.subject).slice(0, 1024), inline: false });
+      if (data.reason) fields.push({ name: "Reason / Story", value: safe(data.reason as string).slice(0, 1024), inline: false });
+      if (data.additionalInfo) fields.push({ name: "Additional Info / Evidence", value: safe(data.additionalInfo as string).slice(0, 1024), inline: false });
+      return [{ title: "🎫 New Ticket Created", color, fields, footer, timestamp }];
+    }
 
     case "ticket.status_changed": {
       const fields = [

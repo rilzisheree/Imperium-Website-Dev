@@ -108,7 +108,11 @@ router.post("/", async (req, res) => {
       status: ticket.status,
       robloxUsername: ticket.robloxUsername,
       discordUsername: ticket.discordUsername,
+      discordUserId: ticket.discordUserId,
+      email: ticket.email,
       subject: ticket.subject,
+      reason: ticket.reason ?? null,
+      additionalInfo: ticket.additionalInfo ?? null,
       createdAt: ticket.createdAt.toISOString(),
     }).catch(() => {});
 
