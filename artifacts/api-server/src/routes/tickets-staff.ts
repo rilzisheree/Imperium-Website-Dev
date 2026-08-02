@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, and, ilike, desc, count, sql } from "drizzle-orm";
+import { eq, and, ilike, desc, count, sql, inArray } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   ticketsTable,
@@ -61,7 +61,7 @@ router.get("/", async (req, res) => {
     const staffIds = [...new Set(tickets.map((t) => t.assignedToId).filter(Boolean))] as number[];
     const staffMap: Record<number, string> = {};
     if (staffIds.length > 0) {
-      const staffMembers = await db.select().from(staffMembersTable).where(sql`id = ANY(ARRAY[${sql.join(staffIds.map(id => sql`${id}`), sql`, `)}])`);
+      const staffMembers = await db.select().from(staffMembersTable).where(inArray(staffMembersTable.id, staffIds));
       for (const s of staffMembers) staffMap[s.id] = s.username;
     }
 

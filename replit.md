@@ -2,13 +2,21 @@
 
 Official website for Imperium — a My Hero Academia lore roleplay Roblox game. Features a cinematic dark frontend, full ticket support system (4 types), ticket tracking, staff dashboard, news/updates, and Resend email notifications.
 
-## Run & Operate
+## Run on Replit
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
+Two workflows must run simultaneously:
+
+1. **Start API Server** — `PORT=8080 pnpm --filter @workspace/api-server run dev` (port 8080, console)
+2. **Start Imperium Frontend** — `PORT=5173 BASE_PATH=/ pnpm --filter @workspace/imperium run dev` (port 5173, webview)
+
+The Replit-managed PostgreSQL database is auto-provisioned; `DATABASE_URL` is set automatically.
+`SESSION_SECRET` is stored as a Replit Secret.
+
+## Useful commands
+
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string (Replit-managed)
 
 ## Stack
 

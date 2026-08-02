@@ -1,0 +1,59 @@
+Tickets won't load in the "Tickets" tab. Here's the logs:
+
+2026-08-02 17:07:41
+Info
+Attributes
+Raw Data
+request errored
+Name
+Value
+time
+1785679661551
+pid
+16
+hostname
+4cc558550070
+req.id
+29
+req.method
+GET
+req.url
+/api/staff/tickets
+res.statusCode
+500
+err.type
+Error
+err.message
+failed with status code 500
+err.stack
+Error: failed with status code 500 at onResFinished (/app/node_modules/.pnpm/pino-http@10.5.0/node_modules/pino-http/logger.js:115:39) at ServerResponse.onResponseComplete (/app/node_modules/.pnpm/pino-http@10.5.0/node_modules/pino-http/logger.js:178:14) at ServerResponse.emit (node:events:520:35) at onFinish (node:_http_outgoing:1024:10) at callback (node:internal/streams/writable:764:21) at afterWrite (node:internal/streams/writable:708:5) at afterWriteTick (node:internal/streams/writable:694:10) at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+responseTime
+623
+level
+info
+
+026-08-02 17:07:41
+Info
+Attributes
+Raw Data
+Failed to list tickets
+Name
+Value
+time
+1785679661488
+pid
+16
+hostname
+4cc558550070
+err.type
+_DrizzleQueryError
+err.message
+Failed query: select "id", "username", "password_hash", "role", "active_session_id", "created_at" from "staff_members" where id = ANY(ARRAY[$1]) params: 11: operator does not exist: integer = text
+err.stack
+Error: Failed query: select "id", "username", "password_hash", "role", "active_session_id", "created_at" from "staff_members" where id = ANY(ARRAY[$1]) params: 11 at NodePgPreparedQuery.queryWithCache (/app/node_modules/.pnpm/drizzle-orm@0.45.2_@types+pg@8.20.0_pg@8.22.0/node_modules/src/pg-core/session.ts:73:11) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async <anonymous> (/app/node_modules/.pnpm/drizzle-orm@0.45.2_@types+pg@8.20.0_pg@8.22.0/node_modules/src/node-postgres/session.ts:154:19) at async <anonymous> (/app/artifacts/api-server/src/routes/tickets-staff.ts:64:28) caused by: error: operator does not exist: integer = text at <anonymous> (/app/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async <anonymous> (/app/node_modules/.pnpm/drizzle-orm@0.45.2_@types+pg@8.20.0_pg@8.22.0/node_modules/src/node-postgres/session.ts:161:13) at async NodePgPreparedQuery.queryWithCache (/app/node_modules/.pnpm/drizzle-orm@0.45.2_@types+pg@8.20.0_pg@8.22.0/node_modules/src/pg-core/session.ts:71:12) at async <anonymous> (/app/node_modules/.pnpm/drizzle-orm@0.45.2_@types+pg@8.20.0_pg@8.22.0/node_modules/src/node-postgres/session.ts:154:19) at async <anonymous> (/app/artifacts/api-server/src/routes/tickets-staff.ts:64:28)
+err.query
+select "id", "username", "password_hash", "role", "active_session_id", "created_at" from "staff_members" where id = ANY(ARRAY[$1])
+err.params[0]
+11
+level
+info
