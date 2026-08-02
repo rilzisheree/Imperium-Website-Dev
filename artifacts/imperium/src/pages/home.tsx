@@ -306,10 +306,7 @@ export default function Home() {
               viewport={{ once: true }}
             >
               <p className="text-secondary text-sm tracking-[4px] uppercase font-semibold mb-4">Community</p>
-              <h2 className="text-4xl md:text-5xl font-heading font-black text-white mb-6">JOIN THE DISCORD</h2>
-              <p className="text-white/40 text-lg mb-10 max-w-xl mx-auto">
-                Connect with thousands of heroes and villains. Get real-time updates, participate in events, and build lasting alliances.
-              </p>
+              <h2 className="text-4xl md:text-5xl font-heading font-black text-white mb-10">JOIN THE DISCORD</h2>
 
               {/* Discord widget */}
               <div className="bg-[#36393F]/60 border border-secondary/20 rounded-2xl p-6 max-w-sm mx-auto backdrop-blur-sm">
