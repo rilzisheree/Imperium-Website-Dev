@@ -63,7 +63,7 @@ function StaffTicketsContent() {
   const [type, setType] = useState("");
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useListTickets({
+  const { data, isLoading, isError } = useListTickets({
     status: status || undefined,
     type: type || undefined,
     search: search || undefined,
@@ -113,6 +113,8 @@ function StaffTicketsContent() {
 
         {isLoading ? (
           <div className="text-white/30 text-center py-20">Loading tickets...</div>
+        ) : isError ? (
+          <div className="text-center py-20 text-red-400/60">Failed to load tickets. Please refresh or try again.</div>
         ) : (
           <div className="space-y-3">
             {data?.tickets.map((ticket) => (
@@ -125,7 +127,7 @@ function StaffTicketsContent() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1">
                       <span className="text-primary font-mono font-bold text-sm">{ticket.ticketCode}</span>
-                      <span className="text-white/30 text-xs capitalize">{ticket.type.replace(/-/g, " ")}</span>
+                      <span className="text-white/30 text-xs capitalize">{ticket.type?.replace(/-/g, " ")}</span>
                     </div>
                     <p className="text-white font-medium line-clamp-1">{ticket.subject}</p>
                     <p className="text-white/40 text-sm mt-0.5">
@@ -134,14 +136,14 @@ function StaffTicketsContent() {
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${statusColors[ticket.status] ?? "bg-gray-500/20 text-gray-300 border-gray-500/30"}`}>
-                      {ticket.status.replace(/-/g, " ")}
+                      {ticket.status?.replace(/-/g, " ")}
                     </span>
                     <span className="text-white/20 text-xs">{new Date(ticket.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
               </a>
             ))}
-            {data?.tickets.length === 0 && (
+            {(!data || data.tickets.length === 0) && (
               <div className="text-center py-20 text-white/30">No tickets found.</div>
             )}
           </div>
