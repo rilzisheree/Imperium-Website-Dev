@@ -63,6 +63,7 @@ function StaffDashboardContent() {
               { href: "/staff/logs", label: "Logs" },
               { href: "/staff/cms", label: "Site Content" },
               { href: "/staff/webhooks", label: "Webhooks" },
+            { href: "/staff/marketplace", label: "Marketplace" },
             ].map((link) => (
               <a
                 key={link.href}

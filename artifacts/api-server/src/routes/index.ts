@@ -6,6 +6,7 @@ import staffRouter from "./staff";
 import updatesRouter from "./updates";
 import cmsRouter from "./cms";
 import webhooksRouter from "./webhooks";
+import marketplaceRouter from "./marketplace";
 
 const router: IRouter = Router();
 
@@ -31,5 +32,9 @@ router.use("/staff/updates", updatesRouter);
 
 // CMS content (public read + staff write)
 router.use("/cms", cmsRouter);
+
+// Marketplace (public read + admin write)
+router.use("/marketplace", marketplaceRouter);
+router.use("/staff/marketplace", marketplaceRouter);
 
 export default router;

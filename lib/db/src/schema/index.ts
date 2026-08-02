@@ -5,3 +5,4 @@ export * from "./login-events";
 export * from "./site-content";
 export * from "./session";
 export * from "./webhooks";
+export * from "./marketplace";

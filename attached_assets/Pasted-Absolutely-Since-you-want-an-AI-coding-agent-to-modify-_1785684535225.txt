@@ -1,0 +1,313 @@
+Absolutely. Since you want an AI coding agent to **modify your existing website**, the prompt should tell it to first understand the entire codebase, preserve the existing design/functionality, and then implement the marketplace end-to-end with Neon.
+
+Here’s a strong prompt you can paste:
+
+```text
+I need you to make a major new feature for my existing website.
+
+IMPORTANT:
+Before changing ANYTHING, read and understand the ENTIRE existing codebase. Do not immediately start coding. Inspect the project structure, existing pages, components, routing, database schema, Neon database integration, authentication/authorization, styling system, API/server logic, and how the current Property Map / Foreclosures functionality works.
+
+The website is currently hosted on Railway and uses Neon Database.
+
+I have attached a screenshot showing the visual style/reference for the current Property Map page. Use it as a design reference, but DO NOT blindly copy it. The new feature should feel like it belongs naturally inside my existing website.
+
+==================================================
+NEW FEATURE: HOSU MARKETPLACE
+==================================================
+
+Add a completely new main navigation tab called:
+
+"Hosu Marketplace"
+
+This should be a first-class page in the website and should be accessible from the main website navigation.
+
+The concept is similar to the GTA V in-game property/business purchasing UI.
+
+The marketplace will allow me to list places/properties/businesses that users can browse and potentially purchase.
+
+==================================================
+MARKETPLACE UI
+==================================================
+
+Create a polished marketplace interface inspired by the GTA V property/business browsing experience.
+
+The UI should include:
+
+- Large property/place image
+- Property/place name
+- Short description
+- Price
+- Location
+- Category/type
+- Availability/status
+- A clear "View Details" or equivalent button
+- A purchase/action button where appropriate
+
+The design should fit the existing website's visual identity.
+
+Do NOT create an unrelated modern SaaS dashboard design.
+
+Keep the visual language consistent with the existing website.
+
+The marketplace should look polished, game-inspired, clean, and professional.
+
+==================================================
+MARKETPLACE LISTINGS
+==================================================
+
+I need a database-backed system where marketplace listings can be created and managed.
+
+Each listing should support at minimum:
+
+- ID
+- Name
+- Description
+- Image
+- Price
+- Location
+- Category
+- Status
+- Created date
+- Updated date
+
+Example:
+
+Name:
+Hosu Auto Shop
+
+Description:
+A fully equipped automotive shop located in central Hosu.
+
+Image:
+[property image URL]
+
+Price:
+$250,000
+
+Location:
+Hosu City
+
+Category:
+Auto Shop
+
+Status:
+Available
+
+The image should support a URL rather than requiring images to be hardcoded into the frontend.
+
+==================================================
+ADMIN / MANAGEMENT
+==================================================
+
+Add a tab in the Staff Dashboard (Head Administrator+) 
+
+Allow to:
+
+- Create a listing
+- Edit a listing
+- Delete a listing
+- Change its price
+- Change its image
+- Change its description
+- Change its location
+- Change its category
+- Change its availability/status
+
+Do not expose these management functions to normal users.
+
+Reuse the existing authentication and permission system if the project already has one.
+
+DO NOT create a second authentication system if one already exists.
+
+If there is already an existing admin/staff dashboard, integrate the marketplace management into it instead of creating an entirely separate admin system.
+
+==================================================
+DATABASE / NEON
+==================================================
+
+Use the existing Neon PostgreSQL database.
+
+Before creating anything, inspect the existing database architecture and follow its conventions.
+
+Create the necessary database table(s) for marketplace listings.
+
+Do not hardcode marketplace listings into React/HTML/TypeScript.
+
+The frontend must retrieve marketplace data from the database.
+
+Make sure the implementation works correctly with the existing Railway deployment.
+
+If database migrations are already used by the project, use the existing migration system.
+
+Do not introduce an unnecessary ORM or database library if the project already has one.
+
+==================================================
+MARKETPLACE PAGE
+==================================================
+
+The main marketplace page should allow users to browse listings.
+
+Include useful filtering/sorting where appropriate, such as:
+
+- Category
+- Price
+- Availability
+- Location
+
+The page should work well with both a small number of listings and a large number of listings.
+
+Use responsive layouts.
+
+Desktop should be the primary experience, but the page should still work properly on smaller screens.
+
+==================================================
+PROPERTY DETAILS
+==================================================
+
+When a user selects a marketplace listing, show a detailed view.
+
+The detail view should include:
+
+- Large image
+- Name
+- Full description
+- Price
+- Location
+- Category
+- Availability
+- Purchase/action area
+
+Make the experience feel similar to browsing a property/business in GTA V.
+
+If the project already has a modal/detail-page pattern, reuse it where appropriate.
+
+==================================================
+IMPORTANT SECURITY REQUIREMENTS
+==================================================
+
+Do not trust client-side values for:
+
+- Price
+- User identity
+- Ownership
+- Availability
+- Permissions
+
+Validate everything server-side.
+
+Only authorized staff/admins should be able to create, edit, or delete listings.
+
+Users must not be able to manipulate a request to purchase something for a different price.
+
+Use the existing project's security/authentication conventions.
+
+==================================================
+DESIGN REQUIREMENTS
+==================================================
+
+Use the existing project's:
+
+- Fonts
+- Colors
+- Components
+- Buttons
+- Navigation
+- Cards
+- Spacing
+- Icons
+- Responsive behavior
+
+where appropriate.
+
+The new marketplace should feel like it was always part of the website.
+
+The screenshot I provided is a visual reference for the existing site's Property Map aesthetic.
+
+I want the marketplace to have a similar game-like feeling, but significantly cleaner and more usable.
+
+Think:
+
+GTA V property browsing
++
+existing website's visual identity
++
+modern polished UI
+
+Avoid:
+
+- Generic Bootstrap-looking layouts
+- Generic SaaS dashboards
+- Excessive gradients
+- Unnecessary animations
+- Huge amounts of empty space
+- Overcomplicated UI
+
+==================================================
+IMPLEMENTATION PROCESS
+==================================================
+
+Follow this process:
+
+1. Read the entire repository.
+2. Understand the current architecture.
+3. Identify the existing routing/navigation system.
+4. Identify the existing database/Neon setup.
+5. Identify existing authentication and permissions.
+6. Identify existing admin/staff functionality.
+7. Identify reusable UI components.
+8. Identify the existing Property Map/Foreclosures implementation.
+9. Design the marketplace architecture based on what already exists.
+10. Create the database migration/schema changes.
+11. Implement backend/API/server functionality.
+12. Implement the Hosu Marketplace page.
+13. Add the new navigation tab.
+14. Implement listing details.
+15. Implement admin management.
+16. Integrate purchasing if an existing economy/ownership system exists.
+17. Add validation and authorization.
+18. Test all functionality.
+19. Fix TypeScript/build/lint/runtime errors.
+20. Make sure the project still builds successfully.
+
+==================================================
+VERY IMPORTANT
+==================================================
+
+Do NOT rewrite unrelated parts of the website.
+
+Do NOT replace the existing framework.
+
+Do NOT replace the existing database system.
+
+Do NOT replace the existing authentication.
+
+Do NOT create duplicate systems when equivalent systems already exist.
+
+Do NOT hardcode marketplace data.
+
+Do NOT break existing pages.
+
+Do NOT remove existing functionality.
+
+Keep the implementation modular and maintainable.
+
+Before finishing, verify that:
+
+- The new "Hosu Marketplace" tab works.
+- Marketplace listings load from Neon.
+- Images display correctly.
+- Prices display correctly.
+- Listing details work.
+- Admins can manage listings.
+- Unauthorized users cannot manage listings.
+- Unavailable listings cannot be purchased.
+- Existing website functionality still works.
+- The production build succeeds.
+- No TypeScript errors remain.
+- No obvious console/runtime errors remain.
+
+If you discover an existing system that can be reused for any of this functionality, USE IT instead of creating a duplicate implementation.
+
+Start by inspecting the repository and explaining the existing architecture to yourself before making changes.
+```

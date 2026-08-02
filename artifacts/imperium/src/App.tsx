@@ -9,6 +9,8 @@ import About from "@/pages/about";
 import Support from "@/pages/support";
 import Track from "@/pages/track";
 import Updates from "@/pages/updates";
+import Marketplace from "@/pages/marketplace";
+import StaffMarketplace from "@/pages/staff-marketplace";
 import StaffLogin from "@/pages/staff-login";
 import StaffDashboard from "@/pages/staff-dashboard";
 import StaffTickets from "@/pages/staff-tickets";
@@ -39,6 +41,7 @@ function Router() {
       <Route path="/support" component={Support} />
       <Route path="/track" component={Track} />
       <Route path="/updates" component={Updates} />
+      <Route path="/marketplace" component={Marketplace} />
       <Route path="/staff" component={StaffLogin} />
       <Route path="/staff/dashboard" component={StaffDashboard} />
       <Route path="/staff/tickets" component={StaffTickets} />
@@ -47,6 +50,7 @@ function Router() {
       <Route path="/staff/logs" component={StaffLogs} />
       <Route path="/staff/cms" component={StaffCMS} />
       <Route path="/staff/webhooks" component={StaffWebhooks} />
+      <Route path="/staff/marketplace" component={StaffMarketplace} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -9,6 +9,7 @@ const ROBLOX_URL = "https://www.roblox.com/games/???";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
+  { href: "/marketplace", label: "Marketplace" },
   { href: "/support", label: "Support" },
   { href: "/updates", label: "Updates" },
 ];
