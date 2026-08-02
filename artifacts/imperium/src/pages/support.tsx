@@ -37,15 +37,6 @@ const ticketTypes = [
     glow: "hover:shadow-[0_0_30px_-5px_rgba(0,217,255,0.4)]",
     icon: "✦",
   },
-  {
-    id: "permadeath-event",
-    title: "Request a Permadeath Event",
-    description: "Submit a formal request to host or participate in a permadeath lore event in the Imperium world.",
-    color: "from-accent/20 to-blue-900/10",
-    border: "border-accent/30 hover:border-accent/60",
-    glow: "hover:shadow-[0_0_30px_-5px_rgba(59,130,246,0.4)]",
-    icon: "★",
-  },
 ];
 
 interface TicketSuccess {

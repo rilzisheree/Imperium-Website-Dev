@@ -27,7 +27,7 @@ const statusColors: Record<string, string> = {
   closed: "bg-gray-500/20 text-gray-300 border-gray-500/30",
 };
 
-const ticketTypes = ["", "report-user", "appeal-ban", "appeal-character-death", "permadeath-event"];
+const ticketTypes = ["", "report-user", "appeal-ban", "appeal-character-death"];
 const ticketStatuses = ["", "pending", "awaiting-user", "under-investigation", "accepted", "denied", "resolved", "closed"];
 
 function StaffHeader() {

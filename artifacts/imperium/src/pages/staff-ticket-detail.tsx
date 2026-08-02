@@ -66,15 +66,6 @@ const presetMessages: Record<string, Record<string, string>> = {
     resolved: "Your character death appeal has been resolved. A final decision has been made.",
     closed: "This appeal has been closed. No further action will be taken unless new evidence is presented.",
   },
-  "permadeath-event": {
-    pending: "Your Permadeath Event request has been submitted and is pending review.",
-    "awaiting-user": "We require additional details regarding your event before we can continue reviewing your request.",
-    "under-investigation": "Your Permadeath Event request is currently being reviewed. Lore Team are evaluating its lore, planning, and overall feasibility.",
-    accepted: "Your Permadeath Event request has been approved. Lore Team will coordinate with you regarding scheduling and any final preparations. Please open a Lore Ticket to continue.",
-    denied: "Your Permadeath Event request has been denied. At this time, the proposal does not meet the necessary requirements or lore standards.",
-    resolved: "Your Permadeath Event request has been resolved. A final decision has been made.",
-    closed: "This request has been closed. No further action will be taken.",
-  },
 };
 
 function StaffHeader() {
