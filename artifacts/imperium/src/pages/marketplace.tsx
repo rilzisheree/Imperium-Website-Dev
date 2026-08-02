@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const DISCORD_URL = "https://discord.gg/7GMcWzJu28";
+const DISCORD_URL = "https://discord.gg/V84UTEbYPa";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
