@@ -58,8 +58,5 @@ timeoutMs = 20000
 
 [userenv]
 
-[userenv.shared]
-RESEND_FROM_EMAIL = "support@imperium.gg"
-
 [nix]
 channel = "stable-25_05"

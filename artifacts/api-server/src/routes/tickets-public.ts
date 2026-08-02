@@ -7,9 +7,6 @@ import {
   ticketEventsTable,
   staffMembersTable,
 } from "@workspace/db";
-import {
-  sendTicketConfirmation,
-} from "../lib/email";
 import { logger } from "../lib/logger";
 import { fireWebhooks } from "../lib/webhooks";
 
@@ -93,14 +90,6 @@ router.post("/", async (req, res) => {
       eventType: "created",
       description: "Ticket submitted by user",
     });
-
-    sendTicketConfirmation({
-      to: email,
-      ticketCode,
-      type,
-      subject,
-      createdAt: ticket.createdAt,
-    }).catch((err) => logger.error({ err }, "Failed to send confirmation email"));
 
     fireWebhooks("ticket.created", {
       ticketCode: ticket.ticketCode,

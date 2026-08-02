@@ -9,11 +9,6 @@ import {
   staffMembersTable,
 } from "@workspace/db";
 import { requireStaff } from "../middlewares/auth";
-import {
-  sendTicketStatusUpdate,
-  sendStaffReplyNotification,
-  sendTicketClosedNotification,
-} from "../lib/email";
 import { logger } from "../lib/logger";
 import { fireWebhooks } from "../lib/webhooks";
 
@@ -148,13 +143,6 @@ router.patch("/:ticketId/status", async (req, res) => {
       actorName: session?.staffUsername ?? "Staff",
     });
 
-    const closedStatuses = ["closed", "resolved", "accepted", "denied"];
-    if (closedStatuses.includes(status)) {
-      sendTicketClosedNotification({ to: ticket.email, ticketCode: ticket.ticketCode, subject: ticket.subject, resolution: status }).catch(() => {});
-    } else {
-      sendTicketStatusUpdate({ to: ticket.email, ticketCode: ticket.ticketCode, subject: ticket.subject, newStatus: status, staffName: session?.staffUsername }).catch(() => {});
-    }
-
     fireWebhooks("ticket.status_changed", {
       ticketCode: ticket.ticketCode,
       type: ticket.type,
@@ -237,8 +225,6 @@ router.post("/:ticketId/replies", async (req, res) => {
     } else {
       await db.update(ticketsTable).set({ updatedAt: new Date() }).where(eq(ticketsTable.id, ticketId));
     }
-
-    sendStaffReplyNotification({ to: ticket.email, ticketCode: ticket.ticketCode, subject: ticket.subject, staffName: authorName, staffRole: authorRole, message: message.trim() }).catch(() => {});
 
     fireWebhooks("ticket.reply_added", {
       ticketCode: ticket.ticketCode,

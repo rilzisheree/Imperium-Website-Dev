@@ -9,7 +9,6 @@ Official website for Imperium — a My Hero Academia lore roleplay Roblox game. 
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string (Replit-managed)
-- Required secret: `RESEND_API_KEY` — Resend email API key
 
 ## Stack
 
