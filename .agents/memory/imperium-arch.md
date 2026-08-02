@@ -29,7 +29,7 @@ When schema changes are made in `lib/db/`, run `pnpm run typecheck:libs` before 
 Session-based (express-session + connect-pg-simple). Requires `session` table in Postgres — created manually via psql (connect-pg-simple's auto-create reads a `table.sql` file that doesn't exist in the pnpm store path). Passwords hashed with bcryptjs (10 rounds). Owner: `vkiraowner`/`vkira4422`. Default moderator: `HeroMod` (same password). Bcryptjs in pnpm store at: `/home/runner/workspace/node_modules/.pnpm/bcryptjs@3.0.3/node_modules/bcryptjs/index.js` — use `node --input-type=commonjs` to require it.
 
 ## Email
-Resend via plain `fetch()` to `https://api.resend.com/emails` — no SDK. RESEND_FROM_EMAIL defaults to `support@imperium.gg`.
+Email (Resend) has been fully removed. No email is sent on ticket creation, status changes, or staff replies.
 
 ## Ticket codes
 Format `IMP-XXXXXX` (6-digit random). Uniqueness checked with up to 10 retry attempts.
