@@ -101,7 +101,7 @@ function LogsContent() {
                 </div>
                 <div className="flex gap-4 mt-1 text-xs text-white/25 flex-wrap">
                   <span>{new Date(log.createdAt).toLocaleString()}</span>
-                  {log.location && <span>📍 {log.location}</span>}
+                  {isOwner && log.location && <span>📍 {log.location}</span>}
                   {log.userAgent && <span className="truncate max-w-xs">{log.userAgent.slice(0, 60)}{log.userAgent.length > 60 ? "..." : ""}</span>}
                 </div>
               </div>

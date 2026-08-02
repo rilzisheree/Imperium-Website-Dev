@@ -102,6 +102,17 @@ function MembersContent() {
     onSuccess: () => { setShowPwd(null); setPwdForm({ password: "" }); refetch(); },
   });
 
+  const resetIpMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/staff/members/${id}/reset-ip`, {
+        method: "PATCH", credentials: "include",
+      });
+      if (!res.ok) throw await res.json();
+      return res.json();
+    },
+    onSuccess: () => refetch(),
+  });
+
   return (
     <div className="container mx-auto px-4 py-10 max-w-5xl">
       <div className="flex items-center justify-between mb-8">
@@ -132,7 +143,15 @@ function MembersContent() {
               </span>
             </div>
             {isOwner && member.id !== me?.id && (
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap justify-end">
+                {(member as any).hasIpLock && (
+                  <Button size="sm" variant="outline"
+                    onClick={() => { if (confirm(`Clear IP lock for ${member.username}? They'll be able to log in from any IP on their next login.`)) resetIpMutation.mutate(member.id); }}
+                    disabled={resetIpMutation.isPending}
+                    className="border-orange-500/30 text-orange-400 text-xs hover:bg-orange-500/10">
+                    🔒 Reset IP Lock
+                  </Button>
+                )}
                 <Button size="sm" variant="outline" onClick={() => { setShowPwd(member.id); setPwdForm({ password: "" }); }}
                   className="border-white/10 text-white/50 text-xs hover:text-white">Reset Password</Button>
                 <Button size="sm" variant="outline" onClick={() => { if (confirm(`Delete ${member.username}?`)) deleteMutation.mutate(member.id); }}

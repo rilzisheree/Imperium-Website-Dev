@@ -46,6 +46,22 @@ router.post("/auth/login", async (req, res) => {
       return;
     }
 
+    // IP lock enforcement: if a locked IP is set, reject any other IP
+    if (staff.lockedIp && staff.lockedIp !== req.ip) {
+      const geo = await geoLookup(req.ip);
+      await db.insert(loginEventsTable).values({
+        staffId: staff.id,
+        eventType: "failed_login",
+        ipAddress: req.ip ?? null,
+        country: geo.country,
+        city: geo.city,
+        userAgent: req.headers["user-agent"] ?? null,
+        note: "Blocked — IP not authorised for this account",
+      });
+      res.status(403).json({ error: "Access denied — this account is locked to a different IP address." });
+      return;
+    }
+
     const session = (req as any).session;
 
     // Geo lookup once for both potential inserts below
@@ -65,9 +81,12 @@ router.post("/auth/login", async (req, res) => {
       });
     }
 
-    // Store session ID on staff record
+    // Store session ID and register IP lock on first login
     await db.update(staffMembersTable)
-      .set({ activeSessionId: session.id })
+      .set({
+        activeSessionId: session.id,
+        lockedIp: staff.lockedIp ?? (req.ip ?? null),
+      })
       .where(eq(staffMembersTable.id, staff.id));
 
     session.staffId = staff.id;
@@ -165,11 +184,14 @@ router.get("/auth/me", async (req, res) => {
 router.get("/members", requireStaff, async (req, res) => {
   try {
     const members = await db.select().from(staffMembersTable).orderBy(staffMembersTable.createdAt);
+    const session = (req as any).session;
+    const isOwner = ["owner", "developer"].includes(session?.staffRole ?? "");
     res.json(members.map((m) => ({
       id: m.id,
       username: m.username,
       role: m.role,
       isOnline: !!m.activeSessionId,
+      hasIpLock: isOwner ? !!m.lockedIp : undefined,
       createdAt: m.createdAt.toISOString(),
     })));
   } catch (err) {
@@ -240,6 +262,29 @@ router.delete("/members/:memberId", requireOwner, async (req, res) => {
     res.json({ message: "Member deleted" });
   } catch (err) {
     logger.error({ err }, "Failed to delete member");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// PATCH /api/staff/members/:id/reset-ip — owner only
+router.patch("/members/:memberId/reset-ip", requireOwner, async (req, res) => {
+  try {
+    const memberId = parseInt(req.params.memberId as string);
+    const [member] = await db.select().from(staffMembersTable).where(eq(staffMembersTable.id, memberId)).limit(1);
+    if (!member) { res.status(404).json({ error: "Member not found" }); return; }
+
+    await db.update(staffMembersTable).set({ lockedIp: null }).where(eq(staffMembersTable.id, memberId));
+
+    const session = (req as any).session;
+    await db.insert(loginEventsTable).values({
+      staffId: memberId,
+      eventType: "forced_out",
+      note: `IP lock reset by ${session.staffUsername}`,
+    });
+
+    res.json({ message: "IP lock cleared" });
+  } catch (err) {
+    logger.error({ err }, "Failed to reset IP lock");
     res.status(500).json({ error: "Internal server error" });
   }
 });

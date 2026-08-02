@@ -8,6 +8,7 @@ export const staffMembersTable = pgTable("staff_members", {
   passwordHash: text("password_hash").notNull(),
   role: text("role").notNull().default("moderator"),
   activeSessionId: text("active_session_id"),
+  lockedIp: text("locked_ip"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
