@@ -49,8 +49,7 @@ Official website for Imperium — a My Hero Academia lore roleplay Roblox game. 
 
 ## Staff Accounts
 
-- `vkiraowner` / `vkira4422` — Owner role
-- `HeroMod` / `vkira4422` — Moderator role
+- `imperiumowner` / `Imperium#2025!` — Owner role (auto-seeded on first API server start)
 
 ## Gotchas
 
