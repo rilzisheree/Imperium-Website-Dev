@@ -25,7 +25,7 @@ const features = [
   },
   {
     title: "Active Community",
-    desc: "Join thousands of passionate roleplayers who breathe life into the Imperium universe every day.",
+    desc: "Join hundreds of passionate roleplayers who breathe life into the Imperium universe every day.",
     icon: "👥",
   },
   {
