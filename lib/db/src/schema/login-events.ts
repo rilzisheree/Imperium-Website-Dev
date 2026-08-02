@@ -6,6 +6,8 @@ export const loginEventsTable = pgTable("login_events", {
   staffId: integer("staff_id").notNull().references(() => staffMembersTable.id),
   eventType: text("event_type").notNull(), // "login" | "logout" | "forced_out" | "session_conflict"
   ipAddress: text("ip_address"),
+  country: text("country"),
+  city: text("city"),
   userAgent: text("user_agent"),
   sessionId: text("session_id"),
   note: text("note"),

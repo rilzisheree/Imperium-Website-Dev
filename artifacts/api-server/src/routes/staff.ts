@@ -5,6 +5,7 @@ import { db } from "@workspace/db";
 import { staffMembersTable, ticketsTable, loginEventsTable } from "@workspace/db";
 import { requireStaff, requireOwner } from "../middlewares/auth";
 import { logger } from "../lib/logger";
+import { geoLookup } from "../lib/geo";
 
 const router = Router();
 
@@ -31,10 +32,13 @@ router.post("/auth/login", async (req, res) => {
     const valid = await bcrypt.compare(password, staff.passwordHash);
     if (!valid) {
       // Log failed attempt
+      const geo = await geoLookup(req.ip);
       await db.insert(loginEventsTable).values({
         staffId: staff.id,
         eventType: "failed_login",
         ipAddress: req.ip ?? null,
+        country: geo.country,
+        city: geo.city,
         userAgent: req.headers["user-agent"] ?? null,
         note: "Invalid password",
       });
@@ -44,6 +48,9 @@ router.post("/auth/login", async (req, res) => {
 
     const session = (req as any).session;
 
+    // Geo lookup once for both potential inserts below
+    const geo = await geoLookup(req.ip);
+
     // Single session enforcement: if someone else is logged in, notify and kick them out
     if (staff.activeSessionId && staff.activeSessionId !== session.id) {
       // Log the session conflict
@@ -51,6 +58,8 @@ router.post("/auth/login", async (req, res) => {
         staffId: staff.id,
         eventType: "session_conflict",
         ipAddress: req.ip ?? null,
+        country: geo.country,
+        city: geo.city,
         userAgent: req.headers["user-agent"] ?? null,
         note: `New login displaced session ${staff.activeSessionId}`,
       });
@@ -76,6 +85,8 @@ router.post("/auth/login", async (req, res) => {
       staffId: staff.id,
       eventType: "login",
       ipAddress: req.ip ?? null,
+      country: geo.country,
+      city: geo.city,
       userAgent: req.headers["user-agent"] ?? null,
       sessionId: session.id,
     });
@@ -263,7 +274,8 @@ router.get("/login-logs", requireOwner, async (req, res) => {
         staffId: loginEventsTable.staffId,
         username: staffMembersTable.username,
         eventType: loginEventsTable.eventType,
-        ipAddress: loginEventsTable.ipAddress,
+        country: loginEventsTable.country,
+        city: loginEventsTable.city,
         userAgent: loginEventsTable.userAgent,
         note: loginEventsTable.note,
         createdAt: loginEventsTable.createdAt,
@@ -279,16 +291,19 @@ router.get("/login-logs", requireOwner, async (req, res) => {
     const total = totalResult[0]?.count ?? 0;
 
     res.json({
-      logs: logs.map((l) => ({
-        id: l.id,
-        staffId: l.staffId,
-        username: l.username ?? "Deleted User",
-        eventType: l.eventType,
-        ipAddress: l.ipAddress ?? null,
-        userAgent: l.userAgent ?? null,
-        note: l.note ?? null,
-        createdAt: l.createdAt.toISOString(),
-      })),
+      logs: logs.map((l) => {
+        const parts = [l.city, l.country].filter(Boolean);
+        return {
+          id: l.id,
+          staffId: l.staffId,
+          username: l.username ?? "Deleted User",
+          eventType: l.eventType,
+          location: parts.length > 0 ? parts.join(", ") : null,
+          userAgent: l.userAgent ?? null,
+          note: l.note ?? null,
+          createdAt: l.createdAt.toISOString(),
+        };
+      }),
       total,
       page: pageNum,
       totalPages: Math.ceil(Number(total) / limit),
