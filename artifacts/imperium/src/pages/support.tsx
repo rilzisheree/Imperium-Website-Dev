@@ -173,16 +173,19 @@ export default function Support() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {ticketTypes.map((type, i) => (
+            {ticketTypes.map((type, i) => {
+              const isLastOdd = i === ticketTypes.length - 1 && ticketTypes.length % 2 !== 0;
+              return (
               <motion.div
                 key={type.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
+                className={isLastOdd ? "md:col-span-2 md:flex md:justify-center" : ""}
               >
                 <button
                   onClick={() => setActiveType(type)}
-                  className={`w-full text-left p-6 rounded-xl border bg-gradient-to-br ${type.color} ${type.border} ${type.glow} backdrop-blur-sm transition-all duration-300 group`}
+                  className={`w-full text-left p-6 rounded-xl border bg-gradient-to-br ${type.color} ${type.border} ${type.glow} backdrop-blur-sm transition-all duration-300 group${isLastOdd ? " md:w-[calc(50%-0.75rem)]" : ""}`}
                 >
                   <div className="text-3xl mb-4 text-white/40 group-hover:text-white/60 transition-colors">{type.icon}</div>
                   <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary transition-colors">{type.title}</h3>
@@ -192,7 +195,8 @@ export default function Support() {
                   </div>
                 </button>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
 
           <motion.div

@@ -171,7 +171,7 @@ function ListingDetailModal({ listing, onClose }: { listing: MarketplaceListing;
             <p className="text-white/60 text-sm leading-relaxed">{listing.description}</p>
           </div>
 
-          {/* Price + CTA */}
+          {/* Price */}
           <div className="flex items-center justify-between pt-3 border-t border-white/8">
             <div>
               <p className="text-white/30 text-xs uppercase tracking-widest mb-0.5">Asking Price</p>
@@ -179,15 +179,8 @@ function ListingDetailModal({ listing, onClose }: { listing: MarketplaceListing;
                 {listing.price}
               </p>
             </div>
-            {isSold ? (
+            {isSold && (
               <span className="text-white/20 text-sm italic">No longer available</span>
-            ) : (
-              <Button
-                onClick={() => window.open(DISCORD_URL, "_blank", "noopener,noreferrer")}
-                className="bg-primary text-black font-bold hover:bg-primary/90 shadow-[0_0_20px_rgba(255,210,63,0.25)]"
-              >
-                Inquire on Discord
-              </Button>
             )}
           </div>
         </div>
@@ -239,7 +232,7 @@ export default function Marketplace() {
               HOSU <span className="text-primary">MARKETPLACE</span>
             </h1>
             <p className="text-white/40 text-base max-w-md mx-auto leading-relaxed">
-              Browse properties, businesses, and venues available in Hosu City. Inquire on Discord to begin acquisition.
+              Browse properties, businesses, and venues available in Hosu City.
             </p>
           </motion.div>
         </div>

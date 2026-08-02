@@ -308,6 +308,16 @@ function StaffNav({ active }: { active: string }) {
   const { data: me } = useGetStaffMe();
   const logout = useStaffLogout();
   const qc = useQueryClient();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const navLinks = [
+    { href: "/staff/dashboard", label: "Dashboard" },
+    { href: "/staff/tickets", label: "Tickets" },
+    { href: "/staff/members", label: "Team" },
+    { href: "/staff/logs", label: "Logs" },
+    { href: "/staff/cms", label: "Site Content" },
+    { href: "/staff/webhooks", label: "Webhooks" },
+    { href: "/staff/marketplace", label: "Marketplace" },
+  ];
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0B0B0F]/90 backdrop-blur-md">
       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
@@ -318,28 +328,29 @@ function StaffNav({ active }: { active: string }) {
           <a href="/" className="text-white/25 text-xs hover:text-primary transition-colors hidden sm:flex items-center gap-1">← Site</a>
         </div>
         <nav className="hidden md:flex items-center gap-5 text-sm">
-          {[
-            { href: "/staff/dashboard", label: "Dashboard" },
-            { href: "/staff/tickets", label: "Tickets" },
-            { href: "/staff/members", label: "Team" },
-            { href: "/staff/logs", label: "Logs" },
-            { href: "/staff/cms", label: "Site Content" },
-            { href: "/staff/webhooks", label: "Webhooks" },
-            { href: "/staff/marketplace", label: "Marketplace" },
-          ].map((l) => (
-            <a key={l.href} href={l.href}
-              className={`transition-colors ${active === l.href ? "text-primary" : "text-white/50 hover:text-primary"}`}>
-              {l.label}
-            </a>
+          {navLinks.map((l) => (
+            <a key={l.href} href={l.href} className={`transition-colors ${active === l.href ? "text-primary" : "text-white/50 hover:text-primary"}`}>{l.label}</a>
           ))}
         </nav>
         <div className="flex items-center gap-3">
           <span className="text-white/30 text-xs hidden sm:block capitalize">{me?.role} — {me?.username}</span>
-          <Button variant="outline" size="sm"
-            onClick={() => logout.mutate(undefined, { onSuccess: () => { qc.clear(); window.location.href = "/staff"; } })}
-            className="border-white/10 text-white/60 text-xs">Sign Out</Button>
+          <Button variant="outline" size="sm" onClick={() => logout.mutate(undefined, { onSuccess: () => { qc.clear(); window.location.href = "/staff"; } })} className="border-white/10 text-white/60 text-xs">Sign Out</Button>
+          <button className="md:hidden p-1.5 text-white/60 hover:text-white transition-colors" onClick={() => setMobileOpen(o => !o)} aria-label="Toggle menu">
+            {mobileOpen ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+            )}
+          </button>
         </div>
       </div>
+      {mobileOpen && (
+        <div className="md:hidden border-t border-white/5 bg-[#0B0B0F]">
+          {navLinks.map((l) => (
+            <a key={l.href} href={l.href} className="block px-4 py-3 text-sm text-white/60 hover:text-primary hover:bg-white/3 transition-colors border-b border-white/5 last:border-0" onClick={() => setMobileOpen(false)}>{l.label}</a>
+          ))}
+        </div>
+      )}
     </header>
   );
 }
