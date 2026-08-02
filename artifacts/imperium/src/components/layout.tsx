@@ -11,7 +11,6 @@ const navLinks = [
   { href: "/about", label: "About" },
   { href: "/support", label: "Support" },
   { href: "/updates", label: "Updates" },
-  { href: "/staff", label: "Staff" },
 ];
 
 function BackToTop() {
