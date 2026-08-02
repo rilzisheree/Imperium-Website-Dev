@@ -10,7 +10,8 @@ export type WebhookEventType =
   | "ticket.reply_added"
   | "ticket.note_added"
   | "ticket.assigned"
-  | "ticket.deleted";
+  | "ticket.deleted"
+  | "ticket.bulk_deleted";
 
 export const ALL_WEBHOOK_EVENTS: WebhookEventType[] = [
   "ticket.created",
@@ -19,6 +20,7 @@ export const ALL_WEBHOOK_EVENTS: WebhookEventType[] = [
   "ticket.note_added",
   "ticket.assigned",
   "ticket.deleted",
+  "ticket.bulk_deleted",
 ];
 
 export function isDiscordUrl(url: string): boolean {
@@ -61,6 +63,7 @@ const EVENT_COLORS: Record<WebhookEventType | "test", number> = {
   "ticket.note_added": 0xfee75c,
   "ticket.assigned": 0xeb459e,
   "ticket.deleted": 0xed4245,
+  "ticket.bulk_deleted": 0xed4245,
   test: 0xffd23f,
 };
 
@@ -310,7 +313,14 @@ export async function fireWebhooks(
   let matching: (typeof webhooksTable.$inferSelect)[];
   try {
     const allActive = await db.select().from(webhooksTable).where(eq(webhooksTable.active, true));
-    matching = allActive.filter((w) => Array.isArray(w.events) && w.events.includes(event));
+    matching = allActive.filter((w) => {
+      if (!Array.isArray(w.events) || !w.events.includes(event)) return false;
+      // If ticketTypes is set (non-empty), filter by ticket type when data has one
+      if (Array.isArray(w.ticketTypes) && w.ticketTypes.length > 0 && data.type) {
+        return w.ticketTypes.includes(data.type as string);
+      }
+      return true;
+    });
   } catch (err) {
     logger.error({ err, event }, "Failed to query webhooks");
     return;

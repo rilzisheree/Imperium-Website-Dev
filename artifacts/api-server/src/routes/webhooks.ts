@@ -16,6 +16,8 @@ import {
 const router = Router();
 router.use(requireStaff);
 
+const VALID_TICKET_TYPES = ["report-user", "appeal-ban", "appeal-character-death", "permadeath-event"];
+
 function formatWebhook(w: typeof webhooksTable.$inferSelect) {
   return {
     id: w.id,
@@ -23,6 +25,7 @@ function formatWebhook(w: typeof webhooksTable.$inferSelect) {
     url: w.url ?? null,
     discordChannelId: w.discordChannelId ?? null,
     events: w.events ?? [],
+    ticketTypes: w.ticketTypes ?? [],
     secret: w.secret ? "••••••••" : null,
     active: w.active,
     createdAt: w.createdAt.toISOString(),
@@ -76,11 +79,17 @@ router.post("/", requireOwner, async (req, res) => {
       return;
     }
 
+    const { ticketTypes } = req.body;
+    const parsedTicketTypes: string[] = Array.isArray(ticketTypes)
+      ? ticketTypes.filter((t: string) => VALID_TICKET_TYPES.includes(t))
+      : [];
+
     const [webhook] = await db.insert(webhooksTable).values({
       name: name.trim(),
       url: trimmedUrl,
       discordChannelId: trimmedChannelId,
       events: parsedEvents,
+      ticketTypes: parsedTicketTypes,
       secret: secret?.trim() || null,
       active: true,
     }).returning();
@@ -95,7 +104,7 @@ router.post("/", requireOwner, async (req, res) => {
 // PATCH /api/staff/webhooks/:id — owner only
 router.patch("/:id", requireOwner, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
 
     const [existing] = await db.select().from(webhooksTable).where(eq(webhooksTable.id, id)).limit(1);
@@ -118,6 +127,11 @@ router.patch("/:id", requireOwner, async (req, res) => {
     if (events !== undefined) {
       update.events = Array.isArray(events) ? events.filter((e: string) => validEvents.includes(e)) : existing.events;
     }
+    if (req.body.ticketTypes !== undefined) {
+      update.ticketTypes = Array.isArray(req.body.ticketTypes)
+        ? req.body.ticketTypes.filter((t: string) => VALID_TICKET_TYPES.includes(t))
+        : existing.ticketTypes;
+    }
     if (secret !== undefined) update.secret = secret?.trim() || null;
     if (active !== undefined) update.active = Boolean(active);
 
@@ -132,7 +146,7 @@ router.patch("/:id", requireOwner, async (req, res) => {
 // DELETE /api/staff/webhooks/:id — owner only
 router.delete("/:id", requireOwner, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
 
     const [existing] = await db.select().from(webhooksTable).where(eq(webhooksTable.id, id)).limit(1);
@@ -149,7 +163,7 @@ router.delete("/:id", requireOwner, async (req, res) => {
 // POST /api/staff/webhooks/:id/test
 router.post("/:id/test", requireOwner, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
 
     const [webhook] = await db.select().from(webhooksTable).where(eq(webhooksTable.id, id)).limit(1);

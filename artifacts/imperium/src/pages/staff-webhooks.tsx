@@ -16,6 +16,27 @@ const ALL_EVENTS = [
   { id: "ticket.deleted", label: "Ticket Deleted" },
 ] as const;
 
+const ALL_TICKET_TYPES = [
+  { id: "report-user", label: "Report User" },
+  { id: "appeal-ban", label: "Ban Appeal" },
+  { id: "appeal-character-death", label: "Void Appeal" },
+  { id: "permadeath-event", label: "Permadeath Event" },
+] as const;
+
+const TICKET_TYPE_STYLES: Record<string, string> = {
+  "report-user": "bg-rose-500/10 text-rose-300 border-rose-500/25",
+  "appeal-ban": "bg-amber-500/10 text-amber-300 border-amber-500/25",
+  "appeal-character-death": "bg-cyan-500/10 text-cyan-300 border-cyan-500/25",
+  "permadeath-event": "bg-purple-500/10 text-purple-300 border-purple-500/25",
+};
+
+const TICKET_TYPE_LABELS: Record<string, string> = {
+  "report-user": "Report User",
+  "appeal-ban": "Ban Appeal",
+  "appeal-character-death": "Void Appeal",
+  "permadeath-event": "Permadeath Event",
+};
+
 const EVENT_STYLES: Record<string, string> = {
   "ticket.created": "bg-indigo-500/10 text-indigo-300 border-indigo-500/25",
   "ticket.status_changed": "bg-orange-500/10 text-orange-300 border-orange-500/25",
@@ -40,6 +61,7 @@ interface Webhook {
   url: string | null;
   discordChannelId: string | null;
   events: string[];
+  ticketTypes: string[];
   secret: string | null;
   active: boolean;
   createdAt: string;
@@ -196,6 +218,7 @@ function CreateWebhookForm({ onCreated }: { onCreated: () => void }) {
   const [channelId, setChannelId] = useState("");
   const [secret, setSecret] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const [selectedTicketTypes, setSelectedTicketTypes] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(true);
 
@@ -210,6 +233,7 @@ function CreateWebhookForm({ onCreated }: { onCreated: () => void }) {
           url: mode === "url" ? url : undefined,
           discordChannelId: mode === "bot" ? channelId : undefined,
           events: selectedEvents,
+          ticketTypes: selectedTicketTypes,
           secret: mode === "url" ? (secret || undefined) : undefined,
         }),
       });
@@ -220,7 +244,7 @@ function CreateWebhookForm({ onCreated }: { onCreated: () => void }) {
       return res.json();
     },
     onSuccess: () => {
-      setName(""); setUrl(""); setChannelId(""); setSecret(""); setSelectedEvents([]);
+      setName(""); setUrl(""); setChannelId(""); setSecret(""); setSelectedEvents([]); setSelectedTicketTypes([]);
       setError("");
       onCreated();
     },
@@ -229,6 +253,9 @@ function CreateWebhookForm({ onCreated }: { onCreated: () => void }) {
 
   const toggleEvent = (id: string) =>
     setSelectedEvents((prev) => prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]);
+
+  const toggleTicketType = (id: string) =>
+    setSelectedTicketTypes((prev) => prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]);
 
   const isValid = name.trim() && selectedEvents.length > 0 &&
     (mode === "url" ? url.trim() : channelId.trim());
@@ -323,6 +350,32 @@ function CreateWebhookForm({ onCreated }: { onCreated: () => void }) {
                 {selectedEvents.length === 0 && (
                   <p className="text-white/25 text-xs">Select at least one event to subscribe to.</p>
                 )}
+              </div>
+
+              {/* Ticket Types */}
+              <div className="space-y-2">
+                <div className="flex items-baseline gap-2">
+                  <label className="text-white/40 text-xs uppercase tracking-widest">Ticket Types</label>
+                  <span className="text-white/20 text-xs normal-case tracking-normal">optional — leave blank to fire for all types</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {ALL_TICKET_TYPES.map((tt) => {
+                    const active = selectedTicketTypes.includes(tt.id);
+                    return (
+                      <button key={tt.id} type="button" onClick={() => toggleTicketType(tt.id)}
+                        className={`px-3 py-1.5 rounded-lg text-xs border font-medium transition-all ${
+                          active ? TICKET_TYPE_STYLES[tt.id] : "border-white/8 text-white/35 hover:text-white/70 hover:border-white/20"
+                        }`}>
+                        {tt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-white/20 text-xs">
+                  {selectedTicketTypes.length === 0
+                    ? "All ticket types will trigger this webhook."
+                    : `Only ${selectedTicketTypes.map((t) => TICKET_TYPE_LABELS[t] ?? t).join(", ")} tickets will trigger this webhook.`}
+                </p>
               </div>
 
               {error && (
@@ -513,13 +566,27 @@ function WebhookCard({ webhook, onRefresh }: { webhook: Webhook; onRefresh: () =
           </div>
         </div>
 
-        {webhook.events.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            {webhook.events.map((ev) => (
-              <span key={ev} className={`text-xs px-2 py-0.5 rounded border font-medium ${EVENT_STYLES[ev] ?? "bg-white/5 text-white/40 border-white/10"}`}>
-                {EVENT_LABELS[ev] ?? ev}
-              </span>
-            ))}
+        {(webhook.events.length > 0 || webhook.ticketTypes.length > 0) && (
+          <div className="mt-3 space-y-1.5">
+            {webhook.events.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {webhook.events.map((ev) => (
+                  <span key={ev} className={`text-xs px-2 py-0.5 rounded border font-medium ${EVENT_STYLES[ev] ?? "bg-white/5 text-white/40 border-white/10"}`}>
+                    {EVENT_LABELS[ev] ?? ev}
+                  </span>
+                ))}
+              </div>
+            )}
+            {webhook.ticketTypes.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 items-center">
+                <span className="text-white/20 text-xs">only:</span>
+                {webhook.ticketTypes.map((tt) => (
+                  <span key={tt} className={`text-xs px-2 py-0.5 rounded border font-medium ${TICKET_TYPE_STYLES[tt] ?? "bg-white/5 text-white/40 border-white/10"}`}>
+                    {TICKET_TYPE_LABELS[tt] ?? tt}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

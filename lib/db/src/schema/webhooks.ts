@@ -6,6 +6,7 @@ export const webhooksTable = pgTable("webhooks", {
   url: text("url"),
   discordChannelId: text("discord_channel_id"),
   events: text("events").array().notNull().default([]),
+  ticketTypes: text("ticket_types").array().notNull().default([]),
   secret: text("secret"),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
