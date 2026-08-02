@@ -6,6 +6,16 @@ import { Input } from "@/components/ui/input";
 import { useStaffLogout } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
@@ -57,11 +67,133 @@ function StaffHeader() {
   );
 }
 
+function BulkDeleteDialog({
+  open,
+  onOpenChange,
+  onDeleted,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onDeleted: () => void;
+}) {
+  const [delStatus, setDelStatus] = useState("pending");
+  const [delType, setDelType] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const label = [
+    delStatus ? delStatus.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "",
+    delType ? delType.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  async function handleDelete() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/staff/tickets/bulk-delete`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: delStatus || undefined,
+          type: delType || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as any).error ?? "Delete failed");
+      }
+      const { deleted } = (await res.json()) as { deleted: number };
+      onDeleted();
+      onOpenChange(false);
+      setDelStatus("pending");
+      setDelType("");
+      // brief toast-style feedback via window title flicker
+      const prev = document.title;
+      document.title = `✓ Deleted ${deleted} ticket${deleted !== 1 ? "s" : ""}`;
+      setTimeout(() => { document.title = prev; }, 2500);
+    } catch (e: any) {
+      setError(e.message ?? "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="bg-[#13131a] border border-white/10 text-white">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-white">Delete Tickets</AlertDialogTitle>
+          <AlertDialogDescription className="text-white/50">
+            Permanently delete all tickets matching the filters below. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div className="flex flex-col gap-3 py-2">
+          <div>
+            <label className="text-xs text-white/40 mb-1.5 block">Status <span className="text-red-400">*</span></label>
+            <select
+              value={delStatus}
+              onChange={(e) => setDelStatus(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 text-white rounded-md px-3 py-2 text-sm"
+            >
+              {ticketStatuses.filter(Boolean).map((s) => (
+                <option key={s} value={s} className="bg-[#13131a]">
+                  {s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-white/40 mb-1.5 block">Type <span className="text-white/30">(optional — leave blank for all types)</span></label>
+            <select
+              value={delType}
+              onChange={(e) => setDelType(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 text-white rounded-md px-3 py-2 text-sm"
+            >
+              <option value="" className="bg-[#13131a]">All Types</option>
+              {ticketTypes.filter(Boolean).map((t) => (
+                <option key={t} value={t} className="bg-[#13131a]">
+                  {t.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                </option>
+              ))}
+            </select>
+          </div>
+          {error && <p className="text-red-400 text-sm">{error}</p>}
+          <p className="text-white/30 text-xs">
+            All <span className="text-white/60 font-semibold">{label}</span> tickets will be permanently removed including their replies, notes, and history.
+          </p>
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel className="border-white/10 text-white/60 bg-transparent hover:bg-white/5">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => { e.preventDefault(); handleDelete(); }}
+            disabled={loading}
+            className="bg-red-600 hover:bg-red-700 text-white border-0"
+          >
+            {loading ? "Deleting…" : "Delete Tickets"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 function StaffTicketsContent() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [type, setType] = useState("");
   const [page, setPage] = useState(1);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
+  const { data: me } = useGetStaffMe();
+  const queryClient = useQueryClient();
+  const isOwner = me?.role === "owner" || me?.role === "developer";
 
   const { data, isLoading, isError } = useListTickets({
     status: status || undefined,
@@ -109,7 +241,26 @@ function StaffTicketsContent() {
               </option>
             ))}
           </select>
+          {isOwner && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkDeleteOpen(true)}
+              className="ml-auto border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/50"
+            >
+              Delete Tickets
+            </Button>
+          )}
         </div>
+
+        <BulkDeleteDialog
+          open={bulkDeleteOpen}
+          onOpenChange={setBulkDeleteOpen}
+          onDeleted={() => {
+            setPage(1);
+            queryClient.invalidateQueries();
+          }}
+        />
 
         {isLoading ? (
           <div className="text-white/30 text-center py-20">Loading tickets...</div>

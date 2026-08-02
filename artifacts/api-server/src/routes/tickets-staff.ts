@@ -79,6 +79,67 @@ router.get("/", async (req, res) => {
   }
 });
 
+// DELETE /api/staff/tickets/bulk-delete — owner/developer only
+router.delete("/bulk-delete", async (req, res) => {
+  try {
+    const session = (req as any).session;
+    const ownerRoles = ["owner", "developer"];
+    if (!session?.staffRole || !ownerRoles.includes(session.staffRole)) {
+      res.status(403).json({ error: "Only owners can bulk-delete tickets" });
+      return;
+    }
+
+    const { status, type } = req.body as { status?: string; type?: string };
+    if (!status && !type) {
+      res.status(400).json({ error: "At least one of 'status' or 'type' is required" });
+      return;
+    }
+
+    const validStatuses = ["pending", "awaiting-user", "under-investigation", "accepted", "denied", "resolved", "closed"];
+    const validTypes = ["report-user", "appeal-ban", "appeal-character-death", "permadeath-event"];
+    if (status && !validStatuses.includes(status)) {
+      res.status(400).json({ error: "Invalid status" });
+      return;
+    }
+    if (type && !validTypes.includes(type)) {
+      res.status(400).json({ error: "Invalid type" });
+      return;
+    }
+
+    const conditions = [];
+    if (status) conditions.push(eq(ticketsTable.status, status));
+    if (type) conditions.push(eq(ticketsTable.type, type));
+    const where = conditions.length > 1 ? and(...conditions) : conditions[0];
+
+    // Fetch IDs to delete
+    const toDelete = await db.select({ id: ticketsTable.id }).from(ticketsTable).where(where);
+    if (toDelete.length === 0) {
+      res.json({ deleted: 0 });
+      return;
+    }
+    const ids = toDelete.map((t) => t.id);
+
+    await db.delete(ticketEventsTable).where(inArray(ticketEventsTable.ticketId, ids));
+    await db.delete(ticketRepliesTable).where(inArray(ticketRepliesTable.ticketId, ids));
+    await db.delete(ticketNotesTable).where(inArray(ticketNotesTable.ticketId, ids));
+    await db.delete(ticketsTable).where(inArray(ticketsTable.id, ids));
+
+    logger.info({ count: ids.length, status, type, actor: session.staffUsername }, "Bulk tickets deleted");
+
+    fireWebhooks("ticket.bulk_deleted", {
+      count: ids.length,
+      status: status ?? null,
+      type: type ?? null,
+      deletedBy: session.staffUsername ?? "Staff",
+    }).catch(() => {});
+
+    res.json({ deleted: ids.length });
+  } catch (err) {
+    logger.error({ err }, "Failed to bulk-delete tickets");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // GET /api/staff/tickets/:ticketId
 router.get("/:ticketId", async (req, res) => {
   try {
