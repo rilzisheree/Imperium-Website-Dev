@@ -58,6 +58,12 @@ The Replit-managed PostgreSQL database is auto-provisioned; `DATABASE_URL` is se
 ## Staff Accounts
 
 - `imperiumowner` / `Imperium#2025!` — Owner role (auto-seeded on first API server start)
+- `kirata` — Owner role (created via `scripts/create-owner.mjs`)
+
+## Scripts
+
+- `scripts/create-owner.mjs` — Creates/updates an owner staff account against any `DATABASE_URL`.
+  Run with: `DATABASE_URL="..." node scripts/create-owner.mjs` (or in Railway shell with `DATABASE_URL` already set)
 
 ## Gotchas
 
