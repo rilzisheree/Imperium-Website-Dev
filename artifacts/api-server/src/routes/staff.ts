@@ -5,7 +5,7 @@ import { db } from "@workspace/db";
 import { staffMembersTable, ticketsTable, loginEventsTable } from "@workspace/db";
 import { requireStaff, requireOwner } from "../middlewares/auth";
 import { logger } from "../lib/logger";
-import { geoLookup } from "../lib/geo";
+import { geoLookup, getRealIp } from "../lib/geo";
 
 const router = Router();
 
@@ -32,11 +32,12 @@ router.post("/auth/login", async (req, res) => {
     const valid = await bcrypt.compare(password, staff.passwordHash);
     if (!valid) {
       // Log failed attempt
-      const geo = await geoLookup(req.ip);
+      const clientIp = getRealIp(req);
+      const geo = await geoLookup(clientIp);
       await db.insert(loginEventsTable).values({
         staffId: staff.id,
         eventType: "failed_login",
-        ipAddress: req.ip ?? null,
+        ipAddress: clientIp,
         country: geo.country,
         city: geo.city,
         userAgent: req.headers["user-agent"] ?? null,
@@ -46,13 +47,15 @@ router.post("/auth/login", async (req, res) => {
       return;
     }
 
+    const clientIp = getRealIp(req);
+
     // IP lock enforcement: if a locked IP is set, reject any other IP
-    if (staff.lockedIp && staff.lockedIp !== req.ip) {
-      const geo = await geoLookup(req.ip);
+    if (staff.lockedIp && staff.lockedIp !== clientIp) {
+      const geo = await geoLookup(clientIp);
       await db.insert(loginEventsTable).values({
         staffId: staff.id,
         eventType: "failed_login",
-        ipAddress: req.ip ?? null,
+        ipAddress: clientIp,
         country: geo.country,
         city: geo.city,
         userAgent: req.headers["user-agent"] ?? null,
@@ -65,7 +68,7 @@ router.post("/auth/login", async (req, res) => {
     const session = (req as any).session;
 
     // Geo lookup once for both potential inserts below
-    const geo = await geoLookup(req.ip);
+    const geo = await geoLookup(clientIp);
 
     // Single session enforcement: if someone else is logged in, notify and kick them out
     if (staff.activeSessionId && staff.activeSessionId !== session.id) {
@@ -73,7 +76,7 @@ router.post("/auth/login", async (req, res) => {
       await db.insert(loginEventsTable).values({
         staffId: staff.id,
         eventType: "session_conflict",
-        ipAddress: req.ip ?? null,
+        ipAddress: clientIp,
         country: geo.country,
         city: geo.city,
         userAgent: req.headers["user-agent"] ?? null,
@@ -85,7 +88,7 @@ router.post("/auth/login", async (req, res) => {
     await db.update(staffMembersTable)
       .set({
         activeSessionId: session.id,
-        lockedIp: staff.lockedIp ?? (req.ip ?? null),
+        lockedIp: staff.lockedIp ?? clientIp,
       })
       .where(eq(staffMembersTable.id, staff.id));
 
@@ -103,7 +106,7 @@ router.post("/auth/login", async (req, res) => {
     await db.insert(loginEventsTable).values({
       staffId: staff.id,
       eventType: "login",
-      ipAddress: req.ip ?? null,
+      ipAddress: clientIp,
       country: geo.country,
       city: geo.city,
       userAgent: req.headers["user-agent"] ?? null,
