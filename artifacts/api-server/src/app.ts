@@ -59,6 +59,7 @@ app.use(
     store: new pgSession({
       pool,
       tableName: "session",
+      createTableIfMissing: true,
     }),
     secret: process.env.SESSION_SECRET ?? "imperium-dev-secret",
     resave: false,
