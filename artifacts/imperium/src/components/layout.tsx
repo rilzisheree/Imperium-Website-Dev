@@ -169,7 +169,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
           <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground/40">
-              &copy; {new Date().getFullYear()} Imperium Roleplay. Not affiliated with Roblox Corporation or Horikoshi Kouhei.
+              &copy; {new Date().getFullYear()} Imperium Roleplay.
             </p>
             <div className="flex items-center gap-5">
               <button onClick={() => window.open(DISCORD_URL, "_blank", "noopener,noreferrer")} className="text-xs text-muted-foreground/40 hover:text-secondary transition-colors">Discord</button>
